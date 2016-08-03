@@ -20,6 +20,8 @@ import com.daimajia.slider.library.SliderLayout;
 import com.daimajia.slider.library.SliderTypes.BaseSliderView;
 import com.daimajia.slider.library.SliderTypes.DefaultSliderView;
 
+import net.daum.mf.map.api.MapPOIItem;
+import net.daum.mf.map.api.MapPoint;
 import net.daum.mf.map.api.MapView;
 
 import org.json.JSONArray;
@@ -47,9 +49,10 @@ public class RoomActivity extends AppCompatActivity {
     public TextView roomTopDeposit;
     public TextView roomTopMonthly;
     public TextView roomTopSubTitle;
-
+    public MapView mapView;
 
     // 데이터
+    public boolean mapFlag = false;
     public String roomSrl;
 
     @Override
@@ -108,6 +111,7 @@ public class RoomActivity extends AppCompatActivity {
                     MY_PERMISSIONS_REQUEST_READ_CONTACTS);
         } else {
             getLoadMap();
+            mapFlag = true;
         }
     }
 
@@ -123,6 +127,7 @@ public class RoomActivity extends AppCompatActivity {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getLoadMap();
+                    mapFlag = true;
                 } else {
                     DB.sendToast("권한이 없습니다. 다시 실행 해주세요!", 2);
                     RoomActivity.this.finish();
@@ -138,8 +143,10 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     public void getLoadMap() {
         try {
-            MapView mapView = new MapView(this);
+            mapView = new MapView(this);
             mapView.setDaumMapApiKey(DB.mapApiKey);
+            mapView.zoomIn(true);
+            mapView.zoomOut(true);
 
             ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_room_map);
             mapViewContainer.addView(mapView);
@@ -159,7 +166,6 @@ public class RoomActivity extends AppCompatActivity {
         protected Void doInBackground(Void... voids) {
             try {
                 URL url = new URL("http://sunbang.o3selab.kr/script/getRoomImageData.php?srl="+roomSrl);
-                DB.sendToast(url.toString(), 1);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 InputStream is = con.getInputStream();
@@ -185,7 +191,6 @@ public class RoomActivity extends AppCompatActivity {
                     final String fileLocation = obj.getString("file");
 
                     String fileUrl = "http://sunbang.o3selab.kr/" + fileLocation.substring(2, fileLocation.length());
-                    DB.sendToast(fileUrl, 1);
                     images.add(fileUrl);
                 }
 
@@ -327,12 +332,35 @@ public class RoomActivity extends AppCompatActivity {
                 value = obj.getString("value");
                 final String monthly = value;
 
+                // 경도
+                obj = jsonArray.getJSONObject(15);
+                value = obj.getString("value");
+                final Double lat = Double.parseDouble(value);
+
+                // 위도
+                obj = jsonArray.getJSONObject(16);
+                value = obj.getString("value");
+                final Double lng = Double.parseDouble(value);
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         roomTopSubTitle.setText(subTitle);
                         roomTopDeposit.setText(deposit);
                         roomTopMonthly.setText(monthly);
+                        if(mapFlag) {
+                            MapPoint point = MapPoint.mapPointWithGeoCoord(lat, lng);
+                            mapView.setMapCenterPointAndZoomLevel(point, -1, true);
+
+                            MapPOIItem marker = new MapPOIItem();
+                            marker.setTag(0);
+                            marker.setMapPoint(point);
+                            marker.setMarkerType(MapPOIItem.MarkerType.BluePin); // 기본으로 제공하는 BluePin 마커 모양.
+                            marker.setItemName(roomTopTitle.getText().toString());
+                            marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+
+                            mapView.addPOIItem(marker);
+                        }
                     }
                 });
 
