@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +31,7 @@ import java.util.Vector;
 import kr.o3selab.sunbang.Activity.NoticeActivity;
 import kr.o3selab.sunbang.Activity.NoticeListActivity;
 import kr.o3selab.sunbang.Activity.RoomActivity;
+import kr.o3selab.sunbang.Activity.SearchActivity;
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Layout.MainNoticeLinearLayout;
 import kr.o3selab.sunbang.Layout.MainRoomLinearLayout;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     public LinearLayout mainNoticeLayout;
     public LinearLayout mainRoomLayout;
     public TextView mainNoticeTextView;
+    public ImageView mainSearchImageView;
 
     public boolean imageDataFlag = false;
     public boolean noticeDataFlag = false;
@@ -64,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         mainNoticeLayout = (LinearLayout) findViewById(R.id.main_notice_layout);
         mainNoticeTextView = (TextView) findViewById(R.id.main_notice_view);
         mainRoomLayout = (LinearLayout) findViewById(R.id.main_room_layout);
-
+        mainSearchImageView = (ImageView) findViewById(R.id.activity_main_ic_search);
 
         // 데이터 처리
         pd = new ProgressDialog(this);
@@ -111,6 +114,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, NoticeListActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        mainSearchImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
                 startActivity(intent);
             }
         });
