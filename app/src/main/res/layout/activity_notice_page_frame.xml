@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:background="@drawable/shape_page_round"
+    android:layout_marginLeft="10dp"
+    android:id="@+id/notice_page_frame">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/notice_page_textview"
+        android:layout_gravity="center"
+        android:textSize="15dp" />
+
+</FrameLayout>
