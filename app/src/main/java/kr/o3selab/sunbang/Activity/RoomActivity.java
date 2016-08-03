@@ -3,15 +3,22 @@ package kr.o3selab.sunbang.Activity;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +40,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import kr.o3selab.sunbang.Instance.DB;
@@ -45,10 +53,32 @@ public class RoomActivity extends AppCompatActivity {
 
     // UI 컨텐츠
     public SliderLayout roomImageLayout;
+
     public TextView roomTopTitle;
     public TextView roomTopDeposit;
     public TextView roomTopMonthly;
     public TextView roomTopSubTitle;
+
+    public TextView roomTopRoomType;
+    public TextView roomTopRoomFloor;
+    public TextView roomTopMonthlyMoney;
+
+    public TextView roomInfoRoomType;
+    public TextView roomInfoRoomSize;
+    public TextView roomInfoDeposit;
+    public TextView roomInfoMonthlyMoney;
+    public TextView roomInfoIncludeAdmin;
+    public TextView roomInfoFireType;
+    public TextView roomInfoElevator;
+    public TextView roomInfoParking;
+    public TextView roomInfoIntoMonth;
+    public TextView roomInfoMaxPeople;
+    public TextView roomInfoOptional;
+
+    public TextView roomDetailContent;
+
+    public FrameLayout contactLayout;
+
     public MapView mapView;
 
     // 데이터
@@ -79,11 +109,31 @@ public class RoomActivity extends AppCompatActivity {
 
         // UI 컨텐츠 로딩..
         roomImageLayout = (SliderLayout) findViewById(R.id.main_room_image_slider);
+
         roomTopTitle = (TextView) findViewById(R.id.activity_room_top_title);
         roomTopDeposit = (TextView) findViewById(R.id.activity_room_top_deposit);
         roomTopMonthly = (TextView) findViewById(R.id.activity_room_top_monthly);
         roomTopSubTitle = (TextView) findViewById(R.id.activity_room_top_subtitle);
 
+        roomTopRoomType = (TextView) findViewById(R.id.activity_room_top_room_type);
+        roomTopRoomFloor = (TextView) findViewById(R.id.activity_room_top_floor);
+        roomTopMonthlyMoney = (TextView) findViewById(R.id.activity_room_top_monthly_money);
+
+        roomInfoRoomType = (TextView) findViewById(R.id.activity_room_info_type);
+        roomInfoRoomSize = (TextView) findViewById(R.id.activity_room_info_size);
+        roomInfoDeposit = (TextView) findViewById(R.id.activity_room_info_deposit);
+        roomInfoMonthlyMoney = (TextView) findViewById(R.id.activity_room_info_monthly);
+        roomInfoIncludeAdmin = (TextView) findViewById(R.id.activity_room_info_include_admin);
+        roomInfoFireType = (TextView) findViewById(R.id.activity_room_info_fire_type);
+        roomInfoElevator = (TextView) findViewById(R.id.activity_room_info_elevator);
+        roomInfoParking = (TextView) findViewById(R.id.activity_room_info_parking);
+        roomInfoIntoMonth = (TextView) findViewById(R.id.activity_room_info_into);
+        roomInfoMaxPeople = (TextView) findViewById(R.id.activity_room_info_max_people);
+        roomInfoOptional = (TextView) findViewById(R.id.activity_room_info_option);
+
+        roomDetailContent = (TextView) findViewById(R.id.activity_room_detail_content);
+
+        contactLayout = (FrameLayout) findViewById(R.id.activity_room_contact);
 
         // 데이터 로딩..
         new GetRoomImagesSliderData().execute();
@@ -145,15 +195,14 @@ public class RoomActivity extends AppCompatActivity {
         try {
             mapView = new MapView(this);
             mapView.setDaumMapApiKey(DB.mapApiKey);
-            mapView.zoomIn(true);
-            mapView.zoomOut(true);
+            mapView.zoomOut(false);
+            mapView.zoomIn(false);
 
             ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_room_map);
             mapViewContainer.addView(mapView);
         } catch (Exception e) {
             DB.sendToast(e.getMessage(), 2);
         }
-
     }
 
 
@@ -273,7 +322,7 @@ public class RoomActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         roomTopTitle.setText(title);
-                        // 콘텐트 뷰 추후 추가
+                        roomDetailContent.setText(Html.fromHtml(content));
                     }
                 });
 
@@ -286,6 +335,7 @@ public class RoomActivity extends AppCompatActivity {
         }
 
     }
+
 
     // =======================================
     //   방 정보 로딩 핸들러 - 2
@@ -322,15 +372,75 @@ public class RoomActivity extends AppCompatActivity {
                 value = obj.getString("value");
                 final String subTitle = value;
 
+                // 방 타입
+                obj = jsonArray.getJSONObject(1);
+                value = obj.getString("value");
+                final String roomType = value;
+
+                // 층수
+                obj = jsonArray.getJSONObject(2);
+                value = obj.getString("value");
+                final String floor = value;
+
+                // 방 사이즈
+                obj = jsonArray.getJSONObject(3);
+                value = obj.getString("value");
+                final String roomSize = value;
+
                 // 보증금
                 obj = jsonArray.getJSONObject(4);
                 value = obj.getString("value");
                 final String deposit = value;
 
-                // 월세
+                // 월세 or 학기
                 obj = jsonArray.getJSONObject(5);
                 value = obj.getString("value");
                 final String monthly = value;
+
+                // 관리비 포함 항목
+                obj = jsonArray.getJSONObject(6);
+                value = obj.getString("value");
+                final String includeAdmin = getTokenString(value);
+
+                // 평균 관리비
+                obj = jsonArray.getJSONObject(7);
+                value = obj.getString("value");
+                final String monthlyMoney = value;
+
+                // 난방
+                obj = jsonArray.getJSONObject(8);
+                value = obj.getString("value");
+                final String fireType = value;
+
+                // 엘리베이터
+                obj = jsonArray.getJSONObject(9);
+                value = obj.getString("value");
+                final String elevator = value;
+
+                // 주차 여부
+                obj = jsonArray.getJSONObject(10);
+                value = obj.getString("value");
+                final String parking = value;
+
+                // 입주 가능 월
+                obj = jsonArray.getJSONObject(11);
+                value = obj.getString("value");
+                final String into = value;
+
+                // 최대 인원
+                obj = jsonArray.getJSONObject(12);
+                value = obj.getString("value");
+                final String maxPeople = value;
+
+                // 옵션 품목
+                obj = jsonArray.getJSONObject(13);
+                value = obj.getString("value");
+                final String optional = getTokenString(value);
+
+                // 연락처
+                obj = jsonArray.getJSONObject(14);
+                value = obj.getString("value");
+                final String phone = getPhoneTokenString(value);
 
                 // 경도
                 obj = jsonArray.getJSONObject(15);
@@ -348,7 +458,52 @@ public class RoomActivity extends AppCompatActivity {
                         roomTopSubTitle.setText(subTitle);
                         roomTopDeposit.setText(deposit);
                         roomTopMonthly.setText(monthly);
+
+                        roomTopRoomType.setText(roomType);
+                        roomTopRoomFloor.setText(floor);
+                        roomTopMonthlyMoney.setText(monthlyMoney);
+
+                        roomInfoRoomType.setText(roomType);
+                        roomInfoRoomSize.setText(roomSize);
+                        roomInfoDeposit.setText(deposit);
+                        roomInfoMonthlyMoney.setText(monthly);
+                        roomInfoIncludeAdmin.setText(includeAdmin);
+                        roomInfoFireType.setText(fireType);
+                        roomInfoElevator.setText(elevator);
+                        roomInfoParking.setText(parking);
+                        roomInfoIntoMonth.setText(into);
+                        roomInfoMaxPeople.setText(maxPeople);
+                        roomInfoOptional.setText(optional);
+
+                        contactLayout.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                new AlertDialog.Builder(RoomActivity.this)
+                                        .setMessage("연락 방법을 선택해주세요.")
+                                        .setPositiveButton("전화", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Uri uri= Uri.parse("tel:" + phone);
+                                                Intent i= new Intent(Intent.ACTION_DIAL,uri);
+                                                startActivity(i);
+
+                                            }
+                                        })
+                                        .setNegativeButton("문자", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Uri uri= Uri.parse("smsto:" + phone);
+                                                Intent i= new Intent(Intent.ACTION_SENDTO,uri);
+                                                i.putExtra("sms_body", "선방앱에서 보고 연락드립니다!");
+                                                startActivity(i);
+                                            }
+                                        })
+                                        .show();
+                            }
+                        });
+
                         if(mapFlag) {
+
                             MapPoint point = MapPoint.mapPointWithGeoCoord(lat, lng);
                             mapView.setMapCenterPointAndZoomLevel(point, -1, true);
 
@@ -368,10 +523,36 @@ public class RoomActivity extends AppCompatActivity {
                 DB.sendToast("에러 발생", 2);
             }
 
-
             return null;
         }
-
     }
 
+    // =======================================
+    //   토큰 분리 메소드
+    // =======================================
+    public String getTokenString(String line) {
+
+        StringTokenizer str = new StringTokenizer(line, "|@|");
+        int count = str.countTokens();
+        String parseString = new String();
+        for(int i = 0; i < count; i++) {
+            if(i == count - 1) {
+                parseString = parseString + str.nextToken();
+            } else {
+                parseString = parseString + str.nextToken() + ", ";
+            }
+        }
+
+        return parseString;
+    }
+
+    // =======================================
+    //   연락처 분리 메소드
+    // =======================================
+    public String getPhoneTokenString(String line) {
+        StringTokenizer str = new StringTokenizer(line, "|@|");
+        String parseString = str.nextToken() + str.nextToken() + str.nextToken();
+
+        return parseString;
+    }
 }

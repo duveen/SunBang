@@ -25,7 +25,8 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".Activity.NoticeActivity" />
         <activity android:name=".Activity.NoticeListActivity" />
-        <activity android:name=".Activity.RoomActivity"></activity>
+        <activity android:name=".Activity.RoomActivity" />
+
     </application>
 
 </manifest>
