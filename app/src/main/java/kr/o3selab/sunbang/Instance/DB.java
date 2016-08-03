@@ -13,6 +13,10 @@ public class DB {
     //버전 정보
     public static double version = 1.0;
 
+    //모듈 정보
+    public static Integer notice = 139;
+    public static Integer room = 171;
+
     //로딩 데이터 플래그
     public static boolean firstData = false;
 

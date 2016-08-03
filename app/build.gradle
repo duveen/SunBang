@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "24.0.0"
+    buildToolsVersion "23.0.0"
 
     defaultConfig {
         applicationId "kr.o3selab.sunbang"
@@ -34,5 +34,6 @@ dependencies {
     // 폰트 자동 크기 조절 라이브러리
     compile 'me.grantland:autofittextview:0.2.+'
 
+    // 다음 맵
     compile files('libs/libDaumMapAndroid.jar')
 }

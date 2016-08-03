@@ -12,6 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.daimajia.slider.library.Animations.DescriptionAnimation;
@@ -39,8 +40,16 @@ public class RoomActivity extends AppCompatActivity {
 
     public final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     public ProgressDialog pd;
-    public SliderLayout roomImageLayout;
 
+    // UI 컨텐츠
+    public SliderLayout roomImageLayout;
+    public TextView roomTopTitle;
+    public TextView roomTopDeposit;
+    public TextView roomTopMonthly;
+    public TextView roomTopSubTitle;
+
+
+    // 데이터
     public String roomSrl;
 
     @Override
@@ -67,9 +76,17 @@ public class RoomActivity extends AppCompatActivity {
 
         // UI 컨텐츠 로딩..
         roomImageLayout = (SliderLayout) findViewById(R.id.main_room_image_slider);
+        roomTopTitle = (TextView) findViewById(R.id.activity_room_top_title);
+        roomTopDeposit = (TextView) findViewById(R.id.activity_room_top_deposit);
+        roomTopMonthly = (TextView) findViewById(R.id.activity_room_top_monthly);
+        roomTopSubTitle = (TextView) findViewById(R.id.activity_room_top_subtitle);
+
 
         // 데이터 로딩..
         new GetRoomImagesSliderData().execute();
+        new GetRoomContentData().execute();
+        new GetRoomOptionalData().execute();
+
 
     }
 
@@ -216,5 +233,117 @@ public class RoomActivity extends AppCompatActivity {
         }
     }
 
+
+    // =======================================
+    //   방 정보 로딩 핸들러 - 1
+    // =======================================
+    public class GetRoomContentData extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomContentData.php?module="+DB.room+"&id="+roomSrl);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                InputStream is = con.getInputStream();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                br.close();
+
+                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                JSONObject obj = jsonArray.getJSONObject(0);
+                final String title = obj.getString("title");
+                final String content = obj.getString("content");
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        roomTopTitle.setText(title);
+                        // 콘텐트 뷰 추후 추가
+                    }
+                });
+
+            } catch (Exception e) {
+                DB.sendToast("에러 발생", 2);
+            }
+
+
+            return null;
+        }
+
+    }
+
+    // =======================================
+    //   방 정보 로딩 핸들러 - 2
+    // =======================================
+    public class GetRoomOptionalData extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            try {
+                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomOptionalData.php?srl="+roomSrl);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                InputStream is = con.getInputStream();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                br.close();
+
+                String value;
+                JSONObject obj;
+
+                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                // 부제목
+                obj = jsonArray.getJSONObject(0);
+                value = obj.getString("value");
+                final String subTitle = value;
+
+                // 보증금
+                obj = jsonArray.getJSONObject(4);
+                value = obj.getString("value");
+                final String deposit = value;
+
+                // 월세
+                obj = jsonArray.getJSONObject(5);
+                value = obj.getString("value");
+                final String monthly = value;
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        roomTopSubTitle.setText(subTitle);
+                        roomTopDeposit.setText(deposit);
+                        roomTopMonthly.setText(monthly);
+                    }
+                });
+
+            } catch (Exception e) {
+                DB.sendToast("에러 발생", 2);
+            }
+
+
+            return null;
+        }
+
+    }
 
 }
