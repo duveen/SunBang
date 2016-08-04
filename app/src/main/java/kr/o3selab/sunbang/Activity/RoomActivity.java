@@ -527,6 +527,7 @@ public class RoomActivity extends AppCompatActivity {
         }
     }
 
+
     // =======================================
     //   토큰 분리 메소드
     // =======================================
@@ -545,6 +546,7 @@ public class RoomActivity extends AppCompatActivity {
 
         return parseString;
     }
+
 
     // =======================================
     //   연락처 분리 메소드

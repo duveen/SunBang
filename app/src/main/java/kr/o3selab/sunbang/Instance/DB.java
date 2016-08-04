@@ -1,6 +1,7 @@
 package kr.o3selab.sunbang.Instance;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -12,6 +13,10 @@ import java.util.Vector;
 public class DB {
     //버전 정보
     public static double version = 1.0;
+
+    //저장 정보
+    public static String DEVICE_ID = "device_id";
+    public static String PHONE_NUMBER = "phone";
 
     //모듈 정보
     public static Integer notice = 139;
@@ -48,4 +53,18 @@ public class DB {
         });
 
     }
+
+    //설정 정보
+    public static String MY_SHARED_PREF = "my_shared";
+    public static SharedPreferences sharedPreferences;
+    public static SharedPreferences getSharedPreferences() {
+        sharedPreferences = context.getSharedPreferences(MY_SHARED_PREF, context.MODE_PRIVATE);
+        return sharedPreferences;
+    }
+    public static SharedPreferences.Editor editor;
+    public static SharedPreferences.Editor getEditor() {
+        editor = getSharedPreferences().edit();
+        return editor;
+    }
+
 }

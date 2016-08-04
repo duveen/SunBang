@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:allowBackup="true"
@@ -26,7 +27,7 @@
         <activity android:name=".Activity.NoticeActivity" />
         <activity android:name=".Activity.NoticeListActivity" />
         <activity android:name=".Activity.RoomActivity" />
-        <activity android:name=".Activity.SearchActivity"></activity>
+        <activity android:name=".Activity.SearchActivity" />
     </application>
 
 </manifest>

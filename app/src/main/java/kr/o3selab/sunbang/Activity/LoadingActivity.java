@@ -5,15 +5,18 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -49,7 +52,90 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         } catch (Exception e) {
             DB.sendToast(e.getMessage(), 2);
         }
+    }
 
+    @Override
+    public void onClick(DialogInterface dialogInterface, int i) {
+
+        switch(i) {
+            case AlertDialog.BUTTON_POSITIVE:
+                Toast.makeText(this, "계속 진행합니다.", Toast.LENGTH_SHORT).show();
+                Thread th = new Thread(new GetVersionData());
+                th.start();
+                break;
+            case AlertDialog.BUTTON_NEGATIVE:
+                Toast.makeText(this, "프로그램을 종료합니다.", Toast.LENGTH_SHORT).show();
+                this.finish();
+                break;
+            default:
+                Toast.makeText(this, "에러", Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
+
+    @Override
+    public void onBackPressed() { }
+
+
+    // =======================================
+    //   퍼미션 권한 획득
+    // =======================================
+    public void getPermission() {
+        if (ContextCompat.checkSelfPermission(LoadingActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED
+                ||ContextCompat.checkSelfPermission(LoadingActivity.this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED
+                ||ContextCompat.checkSelfPermission(LoadingActivity.this,
+                Manifest.permission.READ_PHONE_STATE)
+                != PackageManager.PERMISSION_GRANTED
+                ) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(LoadingActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                DB.sendToast("슬라이더 이미지를 불러오기 위해 필요한 권한입니다.", 2);
+            }
+
+            ActivityCompat.requestPermissions(LoadingActivity.this,
+                    new String[]{
+                             Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            ,Manifest.permission.READ_EXTERNAL_STORAGE
+                            ,Manifest.permission.READ_PHONE_STATE
+                    },
+
+                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+        } else {
+            NetworkCheck();
+        }
+    }
+
+
+    // =======================================
+    //   퍼미션 획득 결과 핸들러
+    // =======================================
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    NetworkCheck();
+                } else {
+                    DB.sendToast("권한을 획득하지 못해 프로그램을 종료합니다. 다시 실행시켜주세요!", 2);
+                    LoadingActivity.this.finish();
+                }
+                return;
+            }
+        }
+    }
+
+
+    // =======================================
+    //   네트워크 체크
+    // =======================================
+    public void NetworkCheck() {
 
         ConnectivityManager manager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mobile = manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE); // 3G나 LTE등 데이터 네트워크에 연결된 상태
@@ -98,27 +184,6 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         thread.start();
     }
 
-    @Override
-    public void onClick(DialogInterface dialogInterface, int i) {
-
-        switch(i) {
-            case AlertDialog.BUTTON_POSITIVE:
-                Toast.makeText(this, "계속 진행합니다.", Toast.LENGTH_SHORT).show();
-                Thread th = new Thread(new GetVersionData());
-                th.start();
-                break;
-            case AlertDialog.BUTTON_NEGATIVE:
-                Toast.makeText(this, "프로그램을 종료합니다.", Toast.LENGTH_SHORT).show();
-                this.finish();
-                break;
-            default:
-                Toast.makeText(this, "에러", Toast.LENGTH_SHORT).show();
-                break;
-        }
-    }
-
-    @Override
-    public void onBackPressed() { }
 
     // =======================================
     //   버전 정보 확인
@@ -127,7 +192,8 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         @Override
         public void run() {
             try {
-                // DB.sendToast("버전 확인 중", 1);
+                getPhoneData();
+
                 URL url = new URL("http://sunbang.o3selab.kr/version.txt");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
@@ -187,46 +253,45 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
 
     // =======================================
-    //   퍼미션 권한 획득
+    //   휴대폰 정보 수집
     // =======================================
-    public void getPermission() {
-        if (ContextCompat.checkSelfPermission(LoadingActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED
-                ||ContextCompat.checkSelfPermission(LoadingActivity.this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+    public void getPhoneData() {
+        TelephonyManager tMgr =(TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
 
-            if (ActivityCompat.shouldShowRequestPermissionRationale(LoadingActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                DB.sendToast("슬라이더 이미지를 불러오기 위해 필요한 권한입니다.", 1);
-            }
+        String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
+        String mPhoneNumber = tMgr.getLine1Number();
 
-            ActivityCompat.requestPermissions(LoadingActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+        SharedPreferences sharedPreferences = DB.getSharedPreferences();
+        if(!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID)) {
 
+            SharedPreferences.Editor editor = DB.getEditor();
+            editor.putString(DB.DEVICE_ID, mID);
+            editor.putString(DB.PHONE_NUMBER, mPhoneNumber);
+            editor.commit();
+
+            sendPhoneData(mID, mPhoneNumber);
         }
     }
 
 
     // =======================================
-    //   퍼미션 획득 결과 핸들러
+    //   휴대폰 정보 전송
     // =======================================
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+    public void sendPhoneData(String mID, String mPhoneNumber) {
+        try {
+            URL url = new URL("http://sunbang.o3selab.kr/script/sendUserData.php?mId="+mID+"&phone="+mPhoneNumber);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
-                } else {
-                    DB.sendToast("권한을 획득하지 못해 프로그램을 종료합니다. 다시 실행시켜주세요!", 2);
-                    LoadingActivity.this.finish();
-                }
-                return;
+            InputStream is = con.getInputStream();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
+            if(br.readLine().equals("TRUE")) {
+            } else {
             }
+            br.close();
+
+        } catch (Exception e) {
+
         }
     }
 
@@ -278,6 +343,5 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             }
         }
     }
-
 
 }
