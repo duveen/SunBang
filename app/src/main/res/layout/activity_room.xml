@@ -588,8 +588,7 @@
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:id="@+id/activity_room_info_option"
-                        android:layout_weight="0.6"
-                        android:singleLine="true" />
+                        android:layout_weight="0.6" />
                 </LinearLayout>
 
             </LinearLayout>

@@ -486,7 +486,7 @@ public class RoomActivity extends AppCompatActivity {
                                                 Uri uri= Uri.parse("tel:" + phone);
                                                 Intent i= new Intent(Intent.ACTION_DIAL,uri);
                                                 startActivity(i);
-
+                                                sendContactLog();
                                             }
                                         })
                                         .setNegativeButton("문자", new DialogInterface.OnClickListener() {
@@ -496,6 +496,7 @@ public class RoomActivity extends AppCompatActivity {
                                                 Intent i= new Intent(Intent.ACTION_SENDTO,uri);
                                                 i.putExtra("sms_body", "선방앱에서 보고 연락드립니다!");
                                                 startActivity(i);
+                                                sendContactLog();
                                             }
                                         })
                                         .show();
@@ -556,5 +557,19 @@ public class RoomActivity extends AppCompatActivity {
         String parseString = str.nextToken() + str.nextToken() + str.nextToken();
 
         return parseString;
+    }
+
+
+    // =======================================
+    //   문의하기 기록 남기기
+    // =======================================
+    public void sendContactLog() {
+        try {
+            URL url = new URL("http://sunbang.o3selab.kr/sendContactLog.php?srl="+roomSrl+"&pn="+DB.phone_number);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+        } catch (Exception e) {
+
+        }
     }
 }

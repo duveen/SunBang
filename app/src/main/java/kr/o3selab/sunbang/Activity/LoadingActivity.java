@@ -271,6 +271,9 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
             sendPhoneData(mID, mPhoneNumber);
         }
+
+        DB.device_id = mID;
+        DB.phone_number = mPhoneNumber;
     }
 
 

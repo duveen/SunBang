@@ -17,6 +17,8 @@ public class DB {
     //저장 정보
     public static String DEVICE_ID = "device_id";
     public static String PHONE_NUMBER = "phone";
+    public static String device_id = "";
+    public static String phone_number = "";
 
     //모듈 정보
     public static Integer notice = 139;
