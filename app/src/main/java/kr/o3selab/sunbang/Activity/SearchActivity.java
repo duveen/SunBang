@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.regex.Pattern;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Layout.SearchResultLinearLayout;
@@ -46,7 +47,14 @@ public class SearchActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new GetSearchResult().execute(textField.getText().toString());
+
+                boolean check = Pattern.matches("^[ㄱ-ㅎ가-힣0-9a-zA-Z ]*$", textField.getText().toString());
+                if(check) {
+                    new GetSearchResult().execute(textField.getText().toString());
+                } else {
+                    DB.sendToast("경고! 한글, 영어, 숫자만 입력 가능합니다!", 1);
+                }
+
             }
         });
     }
