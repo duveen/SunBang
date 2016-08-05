@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +50,7 @@ import java.util.Vector;
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Layout.RoomEvaluateContent;
 import kr.o3selab.sunbang.R;
+import me.grantland.widget.AutofitTextView;
 
 public class RoomActivity extends AppCompatActivity {
 
@@ -57,6 +59,9 @@ public class RoomActivity extends AppCompatActivity {
 
     // UI 컨텐츠
     public SliderLayout roomImageLayout;
+
+    public AutofitTextView roomTopNumber;
+    public ImageView roomTopUndoButton;
 
     public TextView roomTopTitle;
     public TextView roomTopDeposit;
@@ -115,6 +120,8 @@ public class RoomActivity extends AppCompatActivity {
         // UI 컨텐츠 로딩..
         roomImageLayout = (SliderLayout) findViewById(R.id.main_room_image_slider);
 
+        roomTopNumber = (AutofitTextView) findViewById(R.id.room_activity_title);
+        roomTopUndoButton = (ImageView) findViewById(R.id.room_activity_ic_undo);
         roomTopTitle = (TextView) findViewById(R.id.activity_room_top_title);
         roomTopDeposit = (TextView) findViewById(R.id.activity_room_top_deposit);
         roomTopMonthly = (TextView) findViewById(R.id.activity_room_top_monthly);
@@ -170,6 +177,14 @@ public class RoomActivity extends AppCompatActivity {
             }
         });
 
+        roomTopUndoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RoomActivity.this.finish();
+            }
+        });
+
+        roomTopNumber.setText("방 번호 : " + roomSrl);
     }
 
     @Override
