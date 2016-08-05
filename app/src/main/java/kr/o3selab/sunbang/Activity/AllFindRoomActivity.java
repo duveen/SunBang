@@ -34,6 +34,9 @@ public class AllFindRoomActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_all_find_room);
 
+        DB.activity = this;
+        DB.context = this;
+
         undoIc = (ImageView) findViewById(R.id.activity_all_find_ic_undo);
         undoIc.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -51,6 +54,9 @@ public class AllFindRoomActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        DB.activity = this;
+        DB.context = this;
 
         mapView = new MapView(this);
         mapView.setDaumMapApiKey(DB.mapApiKey);

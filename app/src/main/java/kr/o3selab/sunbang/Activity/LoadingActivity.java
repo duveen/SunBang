@@ -74,6 +74,14 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        DB.activity = this;
+        DB.context = this;
+    }
+
+    @Override
     public void onBackPressed() { }
 
 
