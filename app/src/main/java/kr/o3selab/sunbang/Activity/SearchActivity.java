@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import org.json.JSONArray;
@@ -28,6 +29,7 @@ public class SearchActivity extends AppCompatActivity {
     public LinearLayout resultLayout;
     public EditText textField;
     public GetSearchResult task;
+    public ImageView undoIc;
     public Button btn;
 
     @Override
@@ -42,18 +44,24 @@ public class SearchActivity extends AppCompatActivity {
         resultLayout = (LinearLayout) findViewById(R.id.activity_search_result);
         textField = (EditText) findViewById(R.id.activity_search_textfield);
         btn = (Button) findViewById(R.id.activity_search_button);
+        undoIc = (ImageView) findViewById(R.id.activity_search_ic_undo);
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 boolean check = Pattern.matches("^[ㄱ-ㅎ가-힣0-9a-zA-Z ]*$", textField.getText().toString());
                 if (check) {
                     new GetSearchResult().execute(textField.getText().toString());
                 } else {
                     DB.sendToast("경고! 한글, 영어, 숫자만 입력 가능합니다!", 1);
                 }
+            }
+        });
 
+        undoIc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SearchActivity.this.finish();
             }
         });
     }

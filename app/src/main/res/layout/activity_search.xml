@@ -25,11 +25,11 @@
             android:layout_marginLeft="50dp"
             android:layout_marginRight="40dp"
             android:gravity="center"
-            android:id="@+id/room_activity_title" />
+            android:id="@+id/activity_search_title" />
         <ImageView
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:id="@+id/room_activity_ic_undo"
+            android:id="@+id/activity_search_ic_undo"
             android:layout_gravity="left|center_vertical"
             android:src="@drawable/ic_undo"
             android:layout_marginLeft="10dp" />

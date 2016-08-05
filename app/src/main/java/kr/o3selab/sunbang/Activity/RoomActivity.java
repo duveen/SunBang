@@ -239,6 +239,7 @@ public class RoomActivity extends AppCompatActivity {
         try {
             mapView = new MapView(this);
             mapView.setDaumMapApiKey(DB.mapApiKey);
+            MapView.setMapTilePersistentCacheEnabled(true);
             mapView.zoomOut(false);
             mapView.zoomIn(false);
 

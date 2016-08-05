@@ -185,6 +185,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                         try {
                             Thread.currentThread().sleep(1000);
                         } catch (InterruptedException e) {
+                            DB.sendToast(e.getMessage(), 2);
                         }
                     }
                 }
@@ -258,6 +259,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 }
 
             } catch (Exception e) {
+                DB.sendToast(e.getMessage(), 2);
             }
         }
     }
@@ -273,7 +275,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         String mPhoneNumber = tMgr.getLine1Number();
 
         if (mPhoneNumber.substring(0, 2).equals("82")) {
-            mPhoneNumber = "0" + mPhoneNumber.substring(2, 10);
+            mPhoneNumber = "0" + mPhoneNumber.substring(2, mPhoneNumber.length());
         }
 
         SharedPreferences sharedPreferences = DB.getSharedPreferences();
@@ -304,12 +306,15 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
             BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
             if (br.readLine().equals("TRUE")) {
+
             } else {
+
             }
+
             br.close();
 
         } catch (Exception e) {
-
+            DB.sendToast(e.getMessage(), 2);
         }
     }
 

@@ -12,7 +12,7 @@ import java.util.Vector;
  */
 public class DB {
     //버전 정보
-    public static double version = 1.0;
+    public static double version = 1.0002;
 
     //저장 정보
     public static String DEVICE_ID = "device_id";

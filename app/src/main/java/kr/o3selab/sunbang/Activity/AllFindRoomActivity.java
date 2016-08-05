@@ -2,6 +2,7 @@ package kr.o3selab.sunbang.Activity;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,7 +30,7 @@ import java.nio.charset.Charset;
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.R;
 
-public class AllFindRoomActivity extends AppCompatActivity {
+public class AllFindRoomActivity extends AppCompatActivity implements MapView.POIItemEventListener {
     public ProgressDialog pd;
     public MapView mapView;
     public ImageView undoIc;
@@ -54,6 +55,8 @@ public class AllFindRoomActivity extends AppCompatActivity {
         pd = new ProgressDialog(this);
         pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         pd.setCancelable(false);
+        pd.setTitle("알림");
+        pd.setMessage("데이터를 불러오고 있습니다.");
 
     }
 
@@ -65,8 +68,6 @@ public class AllFindRoomActivity extends AppCompatActivity {
         DB.context = this;
 
         getPermission();
-
-
     }
 
     @Override
@@ -129,7 +130,8 @@ public class AllFindRoomActivity extends AppCompatActivity {
             mapView.setDaumMapApiKey(DB.mapApiKey);
             mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(36.80024647035301, 127.07494945930536), true);
             mapView.setZoomLevel(-1, true);
-            mapView.setMapTilePersistentCacheEnabled(true);
+            MapView.setMapTilePersistentCacheEnabled(true);
+            mapView.setPOIItemEventListener(this);
             mapView.zoomIn(true);
             mapView.zoomOut(true);
 
@@ -246,4 +248,33 @@ public class AllFindRoomActivity extends AppCompatActivity {
 
         return title;
     }
+
+
+    // =======================================
+    //   말풍선 클릭시 호출되는 콜백
+    // =======================================
+    @Override
+    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem, MapPOIItem.CalloutBalloonButtonType calloutBalloonButtonType) {
+        MapPOIItem item = mapPOIItem;
+
+        Integer tag = item.getTag();
+
+        Intent intent = new Intent(AllFindRoomActivity.this, RoomActivity.class);
+        intent.putExtra("srl", tag+"");
+        startActivity(intent);
+    }
+
+
+
+    // =======================================
+    //   미사용 콜백 메소드
+    // =======================================
+    @Override
+    public void onPOIItemSelected(MapView mapView, MapPOIItem mapPOIItem) {  }
+    @Override
+    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem) {  }
+    @Override
+    public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {  }
+
+
 }
