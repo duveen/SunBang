@@ -3,8 +3,8 @@ package kr.o3selab.sunbang.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -240,20 +240,20 @@ public class NoticeListActivity extends AppCompatActivity {
             });
             int page = 0;
 
-            if(document_count % 10 == 0) {
+            if (document_count % 10 == 0) {
                 page = document_count / 10;
             } else {
                 page = (document_count / 10) + 1;
             }
 
-            for(int i = 0; i < page; i++) {
+            for (int i = 0; i < page; i++) {
                 final int finalPage = i;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-                        FrameLayout layout = new NoticecPageFrame(NoticeListActivity.this, finalPage+1);
-                        if((finalPage+1) == currentPage) {
+                        FrameLayout layout = new NoticecPageFrame(NoticeListActivity.this, finalPage + 1);
+                        if ((finalPage + 1) == currentPage) {
                             layout.setEnabled(false);
                         } else {
                             layout.setOnClickListener(new View.OnClickListener() {

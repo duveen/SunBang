@@ -3,8 +3,8 @@ package kr.o3selab.sunbang;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -85,8 +85,8 @@ public class MainActivity extends AppCompatActivity {
         Thread th = new Thread() {
             @Override
             public void run() {
-                while(true) {
-                    if(imageDataFlag && noticeDataFlag && roomDataFlag) {
+                while (true) {
+                    if (imageDataFlag && noticeDataFlag && roomDataFlag) {
                         pd.dismiss();
                         break;
                     }
@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                     final String id = obj.getString("document_id");
                     final String title = obj.getString("title");
                     final String regdate = obj.getString("regdate");
-                    final String convertRegdate = regdate.substring(0,4) + "-" + regdate.substring(4,6) + "-" + regdate.substring(6,8);
+                    final String convertRegdate = regdate.substring(0, 4) + "-" + regdate.substring(4, 6) + "-" + regdate.substring(6, 8);
 
                     runOnUiThread(new Runnable() {
                         @Override

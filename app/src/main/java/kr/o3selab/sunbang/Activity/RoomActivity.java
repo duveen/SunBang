@@ -8,14 +8,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.Html;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -46,7 +45,6 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.regex.Pattern;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Layout.RoomEvaluateContent;
@@ -158,12 +156,12 @@ public class RoomActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String content = evaluateTextField.getText().toString();
 
-                if(content.contains(";") || content.contains("씨발") || content.contains("쓰레기")) {
+                if (content.contains(";") || content.contains("씨발") || content.contains("쓰레기")) {
                     DB.sendToast("경고! 특정한 특수문자나 욕설은 작성하실 수 없습니다!", 1);
                     return;
                 }
 
-                if(content.length() < 5 ) {
+                if (content.length() < 5) {
                     DB.sendToast("5글자 이상 작성해주셔야 합니다!", 1);
                     return;
                 }
@@ -260,7 +258,7 @@ public class RoomActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomImageData.php?srl="+roomSrl);
+                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomImageData.php?srl=" + roomSrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 InputStream is = con.getInputStream();
@@ -269,7 +267,7 @@ public class RoomActivity extends AppCompatActivity {
                 StringBuilder sb = new StringBuilder();
                 String line;
 
-                while((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null) {
                     sb.append(line);
                 }
 
@@ -342,7 +340,7 @@ public class RoomActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomContentData.php?module="+DB.room+"&id="+roomSrl);
+                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomContentData.php?module=" + DB.room + "&id=" + roomSrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 InputStream is = con.getInputStream();
@@ -351,7 +349,7 @@ public class RoomActivity extends AppCompatActivity {
                 StringBuilder sb = new StringBuilder();
                 String line;
 
-                while((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null) {
                     sb.append(line);
                 }
 
@@ -392,7 +390,7 @@ public class RoomActivity extends AppCompatActivity {
         protected Void doInBackground(Void... params) {
 
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomOptionalData.php?srl="+roomSrl);
+                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomOptionalData.php?srl=" + roomSrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 InputStream is = con.getInputStream();
@@ -401,7 +399,7 @@ public class RoomActivity extends AppCompatActivity {
                 StringBuilder sb = new StringBuilder();
                 String line;
 
-                while((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null) {
                     sb.append(line);
                 }
 
@@ -542,7 +540,7 @@ public class RoomActivity extends AppCompatActivity {
                             }
                         });
 
-                        if(mapFlag) {
+                        if (mapFlag) {
 
                             MapPoint point = MapPoint.mapPointWithGeoCoord(lat, lng);
                             mapView.setMapCenterPointAndZoomLevel(point, -1, true);
@@ -576,8 +574,8 @@ public class RoomActivity extends AppCompatActivity {
         StringTokenizer str = new StringTokenizer(line, "|@|");
         int count = str.countTokens();
         String parseString = new String();
-        for(int i = 0; i < count; i++) {
-            if(i == count - 1) {
+        for (int i = 0; i < count; i++) {
+            if (i == count - 1) {
                 parseString = parseString + str.nextToken();
             } else {
                 parseString = parseString + str.nextToken() + ", ";
@@ -628,13 +626,13 @@ public class RoomActivity extends AppCompatActivity {
 
             switch (type) {
                 case 1:
-                    Uri uri= Uri.parse("tel:" + phone);
-                    Intent i= new Intent(Intent.ACTION_DIAL,uri);
+                    Uri uri = Uri.parse("tel:" + phone);
+                    Intent i = new Intent(Intent.ACTION_DIAL, uri);
                     startActivity(i);
                     break;
                 case 2:
-                    Uri uri2= Uri.parse("smsto:" + phone);
-                    Intent i2= new Intent(Intent.ACTION_SENDTO,uri2);
+                    Uri uri2 = Uri.parse("smsto:" + phone);
+                    Intent i2 = new Intent(Intent.ACTION_SENDTO, uri2);
                     i2.putExtra("sms_body", "선방앱에서 보고 연락드립니다!");
                     startActivity(i2);
                     break;
@@ -666,19 +664,19 @@ public class RoomActivity extends AppCompatActivity {
         protected Void doInBackground(String... params) {
 
             try {
-                String data = URLEncoder.encode(params[0],"UTF-8");
+                String data = URLEncoder.encode(params[0], "UTF-8");
 
                 URL url = new URL("http://sunbang.o3selab.kr/script/sendCommentData.php?" +
-                        "srl="+roomSrl+"&" +
-                        "phone="+DB.phone_number+"&" +
-                        "data="+data);
+                        "srl=" + roomSrl + "&" +
+                        "phone=" + DB.phone_number + "&" +
+                        "data=" + data);
 
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
                 String line = br.readLine();
 
-                if(line.equals("TRUE")) {
+                if (line.equals("TRUE")) {
                     // 전송 성공 목록 초기화
                 } else {
                     throw new Exception("전송실패");
@@ -716,7 +714,7 @@ public class RoomActivity extends AppCompatActivity {
             });
 
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getEvaluateData.php?srl="+roomSrl);
+                URL url = new URL("http://sunbang.o3selab.kr/script/getEvaluateData.php?srl=" + roomSrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("utf-8")));
@@ -724,14 +722,14 @@ public class RoomActivity extends AppCompatActivity {
                 StringBuilder sb = new StringBuilder();
                 String line;
 
-                while((line=br.readLine()) != null) {
+                while ((line = br.readLine()) != null) {
                     sb.append(line);
                 }
 
                 JSONObject jsonObject = new JSONObject(sb.toString());
                 JSONArray result = jsonObject.getJSONArray("result");
 
-                for(int i = 0; i < result.length(); i++) {
+                for (int i = 0; i < result.length(); i++) {
                     JSONObject obj = result.getJSONObject(i);
 
                     final Integer cId = obj.getInt("id");

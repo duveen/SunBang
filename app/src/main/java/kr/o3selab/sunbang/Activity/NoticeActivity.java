@@ -3,8 +3,8 @@ package kr.o3selab.sunbang.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
@@ -80,7 +80,7 @@ public class NoticeActivity extends AppCompatActivity {
 
     }
 
-    public class getNoticeData extends AsyncTask <Void, Void, Void> {
+    public class getNoticeData extends AsyncTask<Void, Void, Void> {
 
         public String documentId;
 
@@ -96,7 +96,7 @@ public class NoticeActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getNoticeContent.php?id="+documentId);
+                URL url = new URL("http://sunbang.o3selab.kr/script/getNoticeContent.php?id=" + documentId);
 
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 InputStream is = con.getInputStream();
@@ -106,7 +106,7 @@ public class NoticeActivity extends AppCompatActivity {
                 StringBuilder sb = new StringBuilder();
                 String line;
 
-                while((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null) {
                     sb.append(line);
                 }
 

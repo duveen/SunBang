@@ -10,14 +10,13 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -40,6 +39,7 @@ import kr.o3selab.sunbang.R;
 
 public class LoadingActivity extends AppCompatActivity implements DialogInterface.OnClickListener {
     public final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +57,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     @Override
     public void onClick(DialogInterface dialogInterface, int i) {
 
-        switch(i) {
+        switch (i) {
             case AlertDialog.BUTTON_POSITIVE:
                 Toast.makeText(this, "계속 진행합니다.", Toast.LENGTH_SHORT).show();
                 Thread th = new Thread(new GetVersionData());
@@ -82,7 +82,8 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     }
 
     @Override
-    public void onBackPressed() { }
+    public void onBackPressed() {
+    }
 
 
     // =======================================
@@ -92,10 +93,10 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         if (ContextCompat.checkSelfPermission(LoadingActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED
-                ||ContextCompat.checkSelfPermission(LoadingActivity.this,
+                || ContextCompat.checkSelfPermission(LoadingActivity.this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED
-                ||ContextCompat.checkSelfPermission(LoadingActivity.this,
+                || ContextCompat.checkSelfPermission(LoadingActivity.this,
                 Manifest.permission.READ_PHONE_STATE)
                 != PackageManager.PERMISSION_GRANTED
                 ) {
@@ -107,9 +108,9 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
             ActivityCompat.requestPermissions(LoadingActivity.this,
                     new String[]{
-                             Manifest.permission.WRITE_EXTERNAL_STORAGE
-                            ,Manifest.permission.READ_EXTERNAL_STORAGE
-                            ,Manifest.permission.READ_PHONE_STATE
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            , Manifest.permission.READ_EXTERNAL_STORAGE
+                            , Manifest.permission.READ_PHONE_STATE
                     },
 
                     MY_PERMISSIONS_REQUEST_READ_CONTACTS);
@@ -174,8 +175,8 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         Thread thread = new Thread() {
             @Override
             public void run() {
-                while(true) {
-                    if(DB.firstData) {
+                while (true) {
+                    if (DB.firstData) {
                         Intent i = new Intent(LoadingActivity.this, MainActivity.class);
                         startActivity(i);
                         LoadingActivity.this.finish();
@@ -183,7 +184,8 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     } else {
                         try {
                             Thread.currentThread().sleep(1000);
-                        } catch (InterruptedException e) {  }
+                        } catch (InterruptedException e) {
+                        }
                     }
                 }
             }
@@ -208,7 +210,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 InputStream is = con.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
 
-                if( DB.version != Double.parseDouble(br.readLine())) {
+                if (DB.version != Double.parseDouble(br.readLine())) {
                     // DB.sendToast("버전 이 다름", 1);
                     LoadingActivity.this.runOnUiThread(new Runnable() {
                         @Override
@@ -255,7 +257,8 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     th.start();
                 }
 
-            } catch ( Exception e ) { }
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -264,17 +267,17 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     //   휴대폰 정보 수집
     // =======================================
     public void getPhoneData() {
-        TelephonyManager tMgr =(TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
+        TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
 
         String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
         String mPhoneNumber = tMgr.getLine1Number();
 
-        if(mPhoneNumber.substring(0, 2).equals("82")) {
+        if (mPhoneNumber.substring(0, 2).equals("82")) {
             mPhoneNumber = "0" + mPhoneNumber.substring(2, 10);
         }
 
         SharedPreferences sharedPreferences = DB.getSharedPreferences();
-        if(!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID)) {
+        if (!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID)) {
 
             SharedPreferences.Editor editor = DB.getEditor();
             editor.putString(DB.DEVICE_ID, mID);
@@ -294,13 +297,13 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     // =======================================
     public void sendPhoneData(String mID, String mPhoneNumber) {
         try {
-            URL url = new URL("http://sunbang.o3selab.kr/script/sendUserData.php?mId="+mID+"&phone="+mPhoneNumber);
+            URL url = new URL("http://sunbang.o3selab.kr/script/sendUserData.php?mId=" + mID + "&phone=" + mPhoneNumber);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
             InputStream is = con.getInputStream();
 
             BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-            if(br.readLine().equals("TRUE")) {
+            if (br.readLine().equals("TRUE")) {
             } else {
             }
             br.close();
@@ -333,13 +336,13 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 StringBuilder sb = new StringBuilder();
                 String line;
 
-                while((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null) {
                     sb.append(line);
                 }
                 JSONObject jsonObject = new JSONObject(sb.toString());
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
-                for(int i = 0; i < jsonArray.length(); i++) {
+                for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i);
                     String link = obj.getString("link");
 

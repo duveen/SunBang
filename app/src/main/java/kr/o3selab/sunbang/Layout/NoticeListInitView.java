@@ -2,9 +2,7 @@ package kr.o3selab.sunbang.Layout;
 
 import android.content.Context;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import kr.o3selab.sunbang.R;
 

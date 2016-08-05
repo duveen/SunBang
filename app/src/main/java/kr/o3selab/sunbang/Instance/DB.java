@@ -35,7 +35,7 @@ public class DB {
     public static Vector<String> mainImages;
 
     //다음 지도 apiKey
-    public static String mapApiKey= "1011c8a2c4d75d3594f6f3e1fc22901f";
+    public static String mapApiKey = "1011c8a2c4d75d3594f6f3e1fc22901f";
 
     //토스트 전송(쓰레드 가능)
     public static void sendToast(final String msg, final int type) {
@@ -59,11 +59,14 @@ public class DB {
     //설정 정보
     public static String MY_SHARED_PREF = "my_shared";
     public static SharedPreferences sharedPreferences;
+
     public static SharedPreferences getSharedPreferences() {
         sharedPreferences = context.getSharedPreferences(MY_SHARED_PREF, context.MODE_PRIVATE);
         return sharedPreferences;
     }
+
     public static SharedPreferences.Editor editor;
+
     public static SharedPreferences.Editor getEditor() {
         editor = getSharedPreferences().edit();
         return editor;

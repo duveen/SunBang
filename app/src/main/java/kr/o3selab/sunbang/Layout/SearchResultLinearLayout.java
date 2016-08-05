@@ -5,8 +5,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.zip.Inflater;
-
 import kr.o3selab.sunbang.R;
 
 /**

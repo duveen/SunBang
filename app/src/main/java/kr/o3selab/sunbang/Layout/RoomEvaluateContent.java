@@ -43,10 +43,10 @@ public class RoomEvaluateContent extends LinearLayout {
         TextView contentView = (TextView) view.findViewById(R.id.acivity_room_evaluate_content_data);
         ImageView imageView = (ImageView) view.findViewById(R.id.acivity_room_evaluate_content_button);
 
-        nameView.setText(this.name.substring(7, 11) +"님");
+        nameView.setText(this.name.substring(7, 11) + "님");
         contentView.setText(this.data);
 
-        if(DB.phone_number.equals(this.name)) {
+        if (DB.phone_number.equals(this.name)) {
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -79,7 +79,7 @@ public class RoomEvaluateContent extends LinearLayout {
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/sendDeleteComment.php?id="+id);
+                URL url = new URL("http://sunbang.o3selab.kr/script/sendDeleteComment.php?id=" + id);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));

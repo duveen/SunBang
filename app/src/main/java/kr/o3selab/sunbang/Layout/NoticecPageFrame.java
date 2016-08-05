@@ -17,6 +17,6 @@ public class NoticecPageFrame extends FrameLayout {
         View view = inflate(context, R.layout.activity_notice_page_frame, this);
 
         TextView number = (TextView) view.findViewById(R.id.notice_page_textview);
-        number.setText(nu+"");
+        number.setText(nu + "");
     }
 }
