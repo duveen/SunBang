@@ -18,7 +18,10 @@ import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,11 +42,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Layout.RoomEvaluateContent;
 import kr.o3selab.sunbang.R;
 
 public class RoomActivity extends AppCompatActivity {
@@ -76,6 +82,10 @@ public class RoomActivity extends AppCompatActivity {
     public TextView roomInfoOptional;
 
     public TextView roomDetailContent;
+
+    public EditText evaluateTextField;
+    public Button evaluateCommitButton;
+    public LinearLayout evaluateContentLayout;
 
     public FrameLayout contactLayout;
 
@@ -130,12 +140,37 @@ public class RoomActivity extends AppCompatActivity {
 
         roomDetailContent = (TextView) findViewById(R.id.activity_room_detail_content);
 
+        evaluateTextField = (EditText) findViewById(R.id.acivity_room_evaluate_edittext);
+        evaluateCommitButton = (Button) findViewById(R.id.activity_room_evaluate_commit);
+        evaluateContentLayout = (LinearLayout) findViewById(R.id.acivity_room_evaluate_content);
+
         contactLayout = (FrameLayout) findViewById(R.id.activity_room_contact);
 
         // 데이터 로딩..
         new GetRoomImagesSliderData().execute();
         new GetRoomContentData().execute();
         new GetRoomOptionalData().execute();
+        new getEvaluateData().execute();
+
+        // 버튼 핸들러
+        evaluateCommitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String content = evaluateTextField.getText().toString();
+
+                if(content.contains(";") || content.contains("씨발") || content.contains("쓰레기")) {
+                    DB.sendToast("경고! 특정한 특수문자나 욕설은 작성하실 수 없습니다!", 1);
+                    return;
+                }
+
+                if(content.length() < 5 ) {
+                    DB.sendToast("5글자 이상 작성해주셔야 합니다!", 1);
+                    return;
+                }
+
+                new sendEvaluateData(evaluateCommitButton).execute(content);
+            }
+        });
 
     }
 
@@ -608,5 +643,121 @@ public class RoomActivity extends AppCompatActivity {
         } catch (Exception e) {
             DB.sendToast(e.getMessage(), 2);
         }
+    }
+
+
+    // =======================================
+    //   평가하기 전송 핸들러
+    // =======================================
+    public class sendEvaluateData extends AsyncTask<String, Void, Void> {
+
+        public Button button;
+
+        public sendEvaluateData(Button b) {
+            this.button = b;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            button.setEnabled(false);
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            try {
+                String data = URLEncoder.encode(params[0],"UTF-8");
+
+                URL url = new URL("http://sunbang.o3selab.kr/script/sendCommentData.php?" +
+                        "srl="+roomSrl+"&" +
+                        "phone="+DB.phone_number+"&" +
+                        "data="+data);
+
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
+                String line = br.readLine();
+
+                if(line.equals("TRUE")) {
+                    // 전송 성공 목록 초기화
+                } else {
+                    throw new Exception("전송실패");
+                }
+
+            } catch (Exception e) {
+                DB.sendToast(e.getMessage(), 2);
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            new getEvaluateData().execute();
+            evaluateTextField.setText("");
+            button.setEnabled(true);
+        }
+
+    }
+
+
+    // =======================================
+    //   한줄평가 리스트 로딩 핸들러
+    // =======================================
+    public class getEvaluateData extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    evaluateContentLayout.removeAllViews();
+                }
+            });
+
+            try {
+                URL url = new URL("http://sunbang.o3selab.kr/script/getEvaluateData.php?srl="+roomSrl);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("utf-8")));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while((line=br.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONArray result = jsonObject.getJSONArray("result");
+
+                for(int i = 0; i < result.length(); i++) {
+                    JSONObject obj = result.getJSONObject(i);
+
+                    final Integer cId = obj.getInt("id");
+                    final String cName = obj.getString("phone");
+                    final String cData = obj.getString("data");
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            LinearLayout layout = new RoomEvaluateContent(RoomActivity.this, cId, cName, cData);
+                            evaluateContentLayout.addView(layout);
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                DB.sendToast(e.getMessage(), 2);
+            }
+            return null;
+        }
+    }
+
+
+    // =======================================
+    //   한줄평가 리스트 로딩 메소드
+    // =======================================
+    public void getEvaluateDataMethod() {
+        new getEvaluateData().execute();
     }
 }

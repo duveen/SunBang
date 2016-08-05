@@ -269,6 +269,10 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
         String mPhoneNumber = tMgr.getLine1Number();
 
+        if(mPhoneNumber.substring(0, 2).equals("82")) {
+            mPhoneNumber = "0" + mPhoneNumber.substring(2, 10);
+        }
+
         SharedPreferences sharedPreferences = DB.getSharedPreferences();
         if(!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID)) {
 
