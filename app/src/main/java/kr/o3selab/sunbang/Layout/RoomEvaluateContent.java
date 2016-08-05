@@ -67,7 +67,7 @@ public class RoomEvaluateContent extends LinearLayout {
             });
 
         } else {
-            removeViewInLayout(imageView);
+            imageView.setVisibility(View.GONE);
         }
     }
 
