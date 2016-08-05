@@ -26,6 +26,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import kr.o3selab.sunbang.Activity.AllFindRoomActivity;
@@ -139,13 +142,16 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Vector<String> mainImages = DB.mainImages;
+                        final HashMap<String, String> mainImages = DB.mainImages;
 
-                        for (int i = 0; i < mainImages.size(); i++) {
+                        Iterator<String> itr = mainImages.keySet().iterator();
 
+                        while(itr.hasNext()) {
+                            final String link = itr.next();
                             DefaultSliderView textSliderView = new DefaultSliderView(MainActivity.this);
+
                             textSliderView
-                                    .image(mainImages.get(i))
+                                    .image(link)
                                     .setScaleType(BaseSliderView.ScaleType.Fit)
                                     .setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
                                         @Override
@@ -153,12 +159,38 @@ public class MainActivity extends AppCompatActivity {
                                             runOnUiThread(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    Toast.makeText(MainActivity.this, "이미지 사진 클릭", Toast.LENGTH_SHORT).show();
+                                                    String href = mainImages.get(link);
+                                                    StringTokenizer st = new StringTokenizer(href, ":");
+
+                                                    String protocol = st.nextToken();
+                                                    String value = st.nextToken();
+
+                                                    Intent intent;
+                                                    switch (protocol) {
+                                                        case "notice":
+                                                            intent = new Intent(MainActivity.this, NoticeActivity.class);
+                                                            intent.putExtra("document_id", value);
+                                                            startActivity(intent);
+                                                            break;
+
+                                                        case "room":
+                                                            intent = new Intent(MainActivity.this, RoomActivity.class);
+                                                            intent.putExtra("srl", value);
+                                                            startActivity(intent);
+                                                            break;
+
+                                                        case "null":
+                                                            break;
+
+                                                        default:
+                                                            break;
+                                                    }
                                                 }
                                             });
                                         }
                                     });
                             mainSliderLayout.addSlider(textSliderView);
+
                         }
 
                         mainSliderLayout.setPresetTransformer(SliderLayout.Transformer.Accordion);

@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import java.util.Vector;
+import java.util.HashMap;
 
 /**
  * Created by samgi.park on 2016-07-29.
@@ -32,7 +32,7 @@ public class DB {
     public static AppCompatActivity activity;
 
     //메인 이미지 슬라이더
-    public static Vector<String> mainImages;
+    public static HashMap<String, String> mainImages;
 
     //다음 지도 apiKey
     public static String mapApiKey = "1011c8a2c4d75d3594f6f3e1fc22901f";

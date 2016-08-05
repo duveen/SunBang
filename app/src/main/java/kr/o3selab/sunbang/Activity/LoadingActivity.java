@@ -31,6 +31,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Vector;
 
 import kr.o3selab.sunbang.Instance.DB;
@@ -330,7 +331,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 //   메인 이미지 수집
                 // =======================================
                 // DB.sendToast("이미지 로딩중", 1);
-                Vector<String> mainImages = new Vector<>();
+                HashMap<String, String> mainImages = new HashMap<>();
 
                 URL url = new URL("http://sunbang.o3selab.kr/script/getMainImageLink.php");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -350,8 +351,9 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i);
                     String link = obj.getString("link");
+                    String srl = obj.getString("srl");
 
-                    mainImages.add(link);
+                    mainImages.put(link, srl);
                 }
 
                 DB.mainImages = mainImages;
