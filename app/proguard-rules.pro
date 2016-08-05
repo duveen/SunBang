@@ -18,3 +18,4 @@
 
 -dontwarn com.squareup.okhttp.**, com.squareup.picasso.**
 -keep class net.daum.** { *; }
+-keep class me.grantland.** { *; }
