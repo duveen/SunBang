@@ -28,6 +28,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Vector;
 
+import kr.o3selab.sunbang.Activity.AllFindRoomActivity;
 import kr.o3selab.sunbang.Activity.NoticeActivity;
 import kr.o3selab.sunbang.Activity.NoticeListActivity;
 import kr.o3selab.sunbang.Activity.RoomActivity;
@@ -99,7 +100,8 @@ public class MainActivity extends AppCompatActivity {
         locationFrame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this, "위치 별 보기 선택", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this, AllFindRoomActivity.class);
+                startActivity(intent);
             }
         });
 
