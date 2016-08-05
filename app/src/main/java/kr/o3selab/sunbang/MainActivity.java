@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         pd.setMessage("선방 정보를 가져오고 있습니다!.\n잠시만 기다려주세요!");
         pd.setCancelable(false);
         pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        pd.show();
+        //pd.show();
 
         new GetMainImagesSliderData().execute();
         new GetMainNoticeListData().execute();
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        th.start();
+        //th.start();
 
 
         // 이미지 핸들러

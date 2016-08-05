@@ -1,7 +1,12 @@
 package kr.o3selab.sunbang.Activity;
 
+import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -28,6 +33,7 @@ public class AllFindRoomActivity extends AppCompatActivity {
     public ProgressDialog pd;
     public MapView mapView;
     public ImageView undoIc;
+    public final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,18 +64,9 @@ public class AllFindRoomActivity extends AppCompatActivity {
         DB.activity = this;
         DB.context = this;
 
-        mapView = new MapView(this);
-        mapView.setDaumMapApiKey(DB.mapApiKey);
-        mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(36.80024647035301, 127.07494945930536), true);
-        mapView.setZoomLevel(-1, true);
-        mapView.setMapTilePersistentCacheEnabled(true);
-        mapView.zoomIn(true);
-        mapView.zoomOut(true);
+        getPermission();
 
-        ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_map_view);
-        mapViewContainer.addView(mapView);
 
-        new GetLocationPoint().execute();
     }
 
     @Override
@@ -79,6 +76,72 @@ public class AllFindRoomActivity extends AppCompatActivity {
         ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_map_view);
         mapViewContainer.removeAllViews();
     }
+
+    // =======================================
+    //   퍼미션 권한 획득
+    // =======================================
+    public void getPermission() {
+        if (ContextCompat.checkSelfPermission(AllFindRoomActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(AllFindRoomActivity.this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                DB.sendToast("지도를 불러오기 위한 권한 입니다. 권한이 없으면 프로그램이 실행이 되지 않습니다.", 1);
+            }
+
+            ActivityCompat.requestPermissions(AllFindRoomActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+        } else {
+            getLoadMap();
+        }
+    }
+
+
+    // =======================================
+    //   퍼미션 획득 결과 핸들러
+    // =======================================
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getLoadMap();
+                } else {
+                    DB.sendToast("권한이 없습니다. 다시 실행 해주세요!", 2);
+                    AllFindRoomActivity.this.finish();
+                }
+                return;
+            }
+        }
+    }
+
+
+    // =======================================
+    //   지도 호출 메소드
+    // =======================================
+    public void getLoadMap() {
+        try {
+            mapView = new MapView(this);
+            mapView.setDaumMapApiKey(DB.mapApiKey);
+            mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(36.80024647035301, 127.07494945930536), true);
+            mapView.setZoomLevel(-1, true);
+            mapView.setMapTilePersistentCacheEnabled(true);
+            mapView.zoomIn(true);
+            mapView.zoomOut(true);
+
+            ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_map_view);
+            mapViewContainer.addView(mapView);
+
+            new GetLocationPoint().execute();
+        } catch (Exception e) {
+            DB.sendToast(e.getMessage(), 2);
+        }
+    }
+
 
     // =======================================
     //   지도 마커 불러오기
