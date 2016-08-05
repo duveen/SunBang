@@ -12,7 +12,7 @@ import java.util.HashMap;
  */
 public class DB {
     //버전 정보
-    public static double version = 1.0002;
+    public static double version = 1.0003;
 
     //저장 정보
     public static String DEVICE_ID = "device_id";
