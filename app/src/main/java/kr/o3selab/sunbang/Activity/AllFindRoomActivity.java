@@ -74,6 +74,9 @@ public class AllFindRoomActivity extends AppCompatActivity {
         mapViewContainer.removeAllViews();
     }
 
+    // =======================================
+    //   지도 마커 불러오기
+    // =======================================
     public class GetLocationPoint extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -142,6 +145,10 @@ public class AllFindRoomActivity extends AppCompatActivity {
         }
     }
 
+
+    // =======================================
+    //   제목 가져오기
+    // =======================================
     public String getTitle(String srl) {
         String title = "";
         try {

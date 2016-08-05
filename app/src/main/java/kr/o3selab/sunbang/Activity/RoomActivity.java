@@ -98,9 +98,6 @@ public class RoomActivity extends AppCompatActivity {
         Intent intent = getIntent();
         roomSrl = intent.getStringExtra("srl");
 
-        // 지도 퍼미션 권한 획득
-        getPermission();
-
         // 로딩창 생성
         pd = new ProgressDialog(this);
         pd.setMessage("방 정보를 불러오고 있습니다.");
@@ -140,7 +137,21 @@ public class RoomActivity extends AppCompatActivity {
         new GetRoomContentData().execute();
         new GetRoomOptionalData().execute();
 
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // 지도 퍼미션 권한 획득
+        getPermission();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_room_map);
+        mapViewContainer.removeAllViews();
     }
 
     // =======================================
@@ -483,20 +494,13 @@ public class RoomActivity extends AppCompatActivity {
                                         .setPositiveButton("전화", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                Uri uri= Uri.parse("tel:" + phone);
-                                                Intent i= new Intent(Intent.ACTION_DIAL,uri);
-                                                startActivity(i);
-                                                sendContactLog();
+                                                sendContactLog(1, phone);
                                             }
                                         })
                                         .setNegativeButton("문자", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                Uri uri= Uri.parse("smsto:" + phone);
-                                                Intent i= new Intent(Intent.ACTION_SENDTO,uri);
-                                                i.putExtra("sms_body", "선방앱에서 보고 연락드립니다!");
-                                                startActivity(i);
-                                                sendContactLog();
+                                                sendContactLog(2, phone);
                                             }
                                         })
                                         .show();
@@ -563,13 +567,46 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   문의하기 기록 남기기
     // =======================================
-    public void sendContactLog() {
+    public void sendContactLog(Integer type, String phone) {
         try {
-            URL url = new URL("http://sunbang.o3selab.kr/sendContactLog.php?srl="+roomSrl+"&pn="+DB.phone_number);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            Thread th = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        URL url = new URL("http://sunbang.o3selab.kr/script/sendContactLog.php?srl=" + roomSrl + "&pn=" + DB.phone_number);
+                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                        BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
+                        String line;
+                        if (!(line = br.readLine()).equals("TRUE")) {
+                            DB.sendToast("예외발생! 관리자에게 문의해주세요!", 2);
+                        }
+                        br.close();
+                    } catch (Exception e) {
+                        DB.sendToast("예외발생! 관리자에게 문의해주세요!", 2);
+                    }
+                }
+            });
+
+            th.start();
+
+
+            switch (type) {
+                case 1:
+                    Uri uri= Uri.parse("tel:" + phone);
+                    Intent i= new Intent(Intent.ACTION_DIAL,uri);
+                    startActivity(i);
+                    break;
+                case 2:
+                    Uri uri2= Uri.parse("smsto:" + phone);
+                    Intent i2= new Intent(Intent.ACTION_SENDTO,uri2);
+                    i2.putExtra("sms_body", "선방앱에서 보고 연락드립니다!");
+                    startActivity(i2);
+                    break;
+            }
 
         } catch (Exception e) {
-
+            DB.sendToast(e.getMessage(), 2);
         }
     }
 }
