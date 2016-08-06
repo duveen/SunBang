@@ -1,218 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="kr.o3selab.sunbang.MainActivity">
+    android:fitsSystemWindows="true"
+    tools:openDrawer="start"  >
 
-    <!--상단 메뉴바-->
-    <FrameLayout
+    <!-- The main content view -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_gravity="center_horizontal"
-        android:background="#5f84ce">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="선문대 방값"
-            android:id="@+id/textView"
-            android:layout_gravity="center"
-            android:textStyle="bold"
-            android:textColor="#ffffff" />
-
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:id="@+id/activity_main_ic_search"
-            android:layout_gravity="right|center_vertical"
-            android:src="@drawable/ic_search_black"
-            android:layout_marginRight="10dp" />
-    </FrameLayout>
-
-    <!--메인 스크롤 컨텐츠-->
-    <ScrollView
-        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:id="@+id/scrollView" >
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:orientation="vertical"
+        <!--상단 메뉴바-->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            android:background="#5f84ce">
 
-            <!--메인 슬라이더 이미지 시작-->
-            <com.daimajia.slider.library.SliderLayout
-                android:id="@+id/main_slider"
-                android:layout_width="match_parent"
-                android:layout_height="210dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/shape_round" />
-            <!--메인 슬라이더 이미지 종료-->
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:id="@+id/activity_main_ic_menu"
+                android:layout_gravity="left|center_vertical"
+                android:src="@drawable/main_menu_ic"
+                android:padding="10dp"/>
 
-            <!--위치 별, 금액 별 버튼 시작-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="선문대 방값"
+                android:id="@+id/textView"
+                android:layout_gravity="center"
+                android:textStyle="bold"
+                android:textColor="#ffffff" />
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:id="@+id/activity_main_ic_search"
+                android:layout_gravity="right|center_vertical"
+                android:src="@drawable/ic_search_black"
+                android:padding="10dp"/>
+        </FrameLayout>
+
+        <!--메인 스크롤 컨텐츠-->
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/scrollView" >
+
             <LinearLayout
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <FrameLayout
-                    android:id="@+id/main_location_frame"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/shape_round"
+                <!--메인 슬라이더 이미지 시작-->
+                <com.daimajia.slider.library.SliderLayout
+                    android:id="@+id/main_slider"
+                    android:layout_width="match_parent"
+                    android:layout_height="210dp"
+                    android:layout_marginTop="10dp"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginRight="5dp">
-
-                    <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center">
-
-                        <ImageView
-                            android:layout_width="25dp"
-                            android:layout_height="25dp"
-                            android:id="@+id/imageView2"
-                            android:src="@drawable/ic_main_map" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textAppearance="?android:attr/textAppearanceLarge"
-                            android:text="위치 별"
-                            android:id="@+id/textView2"
-                            android:textSize="18dp"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginLeft="5dp" />
-                    </LinearLayout>
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/main_money_frame"
-                    android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_weight="1"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginTop="10dp"
                     android:layout_marginRight="10dp"
-                    android:background="@drawable/shape_round">
+                    android:background="@drawable/shape_round" />
+                <!--메인 슬라이더 이미지 종료-->
 
-                    <LinearLayout
-                        android:orientation="horizontal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center" >
+                <!--위치 별, 금액 별 버튼 시작-->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-                        <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:id="@+id/imageView3"
-                            android:src="@drawable/ic_main_money" />
+                    <FrameLayout
+                        android:id="@+id/main_location_frame"
+                        android:layout_width="0dp"
+                        android:layout_height="60dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/shape_round"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginRight="5dp">
 
-                        <TextView
+                        <LinearLayout
+                            android:orientation="horizontal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textAppearance="?android:attr/textAppearanceLarge"
-                            android:text="금액 별"
-                            android:id="@+id/textView3"
-                            android:layout_marginLeft="5dp"
-                            android:textSize="18dp"
-                            android:layout_gravity="center_vertical" />
-                    </LinearLayout>
-                </FrameLayout>
-            </LinearLayout>
-            <!--위치 별, 금액 별 버튼 종료-->
+                            android:layout_gravity="center">
 
-            <!--최근 등록원룸 리스트 시작-->
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/shape_round"
-                android:paddingTop="15dp"
-                android:paddingBottom="15dp"
-                android:paddingRight="10dp"
-                android:paddingLeft="10dp"
-                android:id="@+id/main_room_layout">
+                            <ImageView
+                                android:layout_width="25dp"
+                                android:layout_height="25dp"
+                                android:id="@+id/imageView2"
+                                android:src="@drawable/ic_main_map" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:text="최근 등록 원룸"
-                    android:id="@+id/textView6"
-                    android:textColor="#000000"
-                    android:paddingLeft="10dp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?android:attr/textAppearanceLarge"
+                                android:text="위치 별"
+                                android:id="@+id/textView2"
+                                android:textSize="18dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginLeft="5dp" />
+                        </LinearLayout>
+                    </FrameLayout>
 
-                <FrameLayout
+                    <FrameLayout
+                        android:id="@+id/main_money_frame"
+                        android:layout_width="0dp"
+                        android:layout_height="60dp"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginRight="10dp"
+                        android:background="@drawable/shape_round">
+
+                        <LinearLayout
+                            android:orientation="horizontal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center" >
+
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:id="@+id/imageView3"
+                                android:src="@drawable/ic_main_money" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?android:attr/textAppearanceLarge"
+                                android:text="금액 별"
+                                android:id="@+id/textView3"
+                                android:layout_marginLeft="5dp"
+                                android:textSize="18dp"
+                                android:layout_gravity="center_vertical" />
+                        </LinearLayout>
+                    </FrameLayout>
+                </LinearLayout>
+                <!--위치 별, 금액 별 버튼 종료-->
+
+                <!--최근 등록원룸 리스트 시작-->
+                <LinearLayout
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#cccccc"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"></FrameLayout>
-
-
-
-            </LinearLayout>
-            <!--최근 등록원룸 리스트 종료-->
-
-            <!--공지사항 리스트 시작-->
-            <LinearLayout
-                android:id="@+id/main_notice_layout"
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/shape_round"
-                android:paddingTop="15dp"
-                android:paddingBottom="15dp"
-                android:paddingRight="10dp"
-                android:paddingLeft="10dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:text="공지사항"
-                    android:id="@+id/main_notice_view"
-                    android:textColor="#000000"
-                    android:paddingLeft="10dp" />
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/shape_round"
+                    android:paddingTop="15dp"
+                    android:paddingBottom="15dp"
+                    android:paddingRight="10dp"
+                    android:paddingLeft="10dp"
+                    android:id="@+id/main_room_layout">
 
-                <FrameLayout
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="최근 등록 원룸"
+                        android:id="@+id/textView6"
+                        android:textColor="#000000"
+                        android:paddingLeft="10dp" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:background="#cccccc"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"></FrameLayout>
+
+
+
+                </LinearLayout>
+                <!--최근 등록원룸 리스트 종료-->
+
+                <!--공지사항 리스트 시작-->
+                <LinearLayout
+                    android:id="@+id/main_notice_layout"
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:background="#cccccc"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"></FrameLayout>
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/shape_round"
+                    android:paddingTop="15dp"
+                    android:paddingBottom="15dp"
+                    android:paddingRight="10dp"
+                    android:paddingLeft="10dp">
 
-            </LinearLayout>
-            <!--공지사항 리스트 종료-->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="공지사항"
+                        android:id="@+id/main_notice_view"
+                        android:textColor="#000000"
+                        android:paddingLeft="10dp" />
 
-            <!--이벤트 슬라이더 시작-->
-            <com.daimajia.slider.library.SliderLayout
-                android:id="@+id/event_slider"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/shape_round"/>
-            <!--이벤트 슬라이더 종료-->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:background="#cccccc"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"></FrameLayout>
 
-            <!--CopyRight 시작-->
-            <FrameLayout
+                </LinearLayout>
+                <!--공지사항 리스트 종료-->
+
+                <!--이벤트 슬라이더 시작-->
+                <com.daimajia.slider.library.SliderLayout
+                    android:id="@+id/event_slider"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:background="@drawable/shape_round"/>
+                <!--이벤트 슬라이더 종료-->
+
+                <!--CopyRight 시작-->
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="#bbbbbb"
@@ -240,8 +257,20 @@
                         android:textSize="8dp"
                         android:textColor="#ffffff" />
                 </FrameLayout>
-            <!--CopyRight 종료-->
+                <!--CopyRight 종료-->
 
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- The navigation drawer -->
+    <android.support.design.widget.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header_main"
+        app:menu="@menu/activity_main_drawer" />
+
+</android.support.v4.widget.DrawerLayout>

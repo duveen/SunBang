@@ -4,7 +4,12 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -72,6 +77,19 @@ public class MainActivity extends AppCompatActivity {
         mainNoticeTextView = (TextView) findViewById(R.id.main_notice_view);
         mainRoomLayout = (LinearLayout) findViewById(R.id.main_room_layout);
         mainSearchImageView = (ImageView) findViewById(R.id.activity_main_ic_search);
+
+        // 네비게이션 바 핸들러
+        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final NavigationView drawerView = (NavigationView) findViewById(R.id.nav_view);
+        ImageView menuButton = (ImageView) findViewById(R.id.activity_main_ic_menu);
+
+
+        menuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.openDrawer(Gravity.START);
+            }
+        });
 
         // 데이터 처리
         pd = new ProgressDialog(this);
@@ -353,5 +371,15 @@ public class MainActivity extends AppCompatActivity {
         DB.context = this;
         DB.activity = this;
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 }
