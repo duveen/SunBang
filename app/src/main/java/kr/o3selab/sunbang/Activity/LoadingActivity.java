@@ -212,6 +212,11 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 InputStream is = con.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
 
+                if(!(con.getResponseCode() == 200)) {
+                    throw new Exception("서버연결에 실패했습니다. 프로그램을 종료합니다.");
+                }
+
+
                 if (DB.version != Double.parseDouble(br.readLine())) {
                     // DB.sendToast("버전 이 다름", 1);
                     LoadingActivity.this.runOnUiThread(new Runnable() {
@@ -261,6 +266,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
             } catch (Exception e) {
                 DB.sendToast(e.getMessage(), 2);
+                LoadingActivity.this.finish();
             }
         }
     }
