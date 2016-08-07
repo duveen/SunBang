@@ -261,7 +261,7 @@ public class RoomActivity extends AppCompatActivity {
             ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_room_map);
             mapViewContainer.addView(mapView);
         } catch (Exception e) {
-            DB.sendToast(e.getMessage(), 2);
+            //DB.sendToast(e.getMessage(), 2);
         }
     }
 

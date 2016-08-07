@@ -264,17 +264,23 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 }
 
             } catch (Exception e) {
-                new AlertDialog.Builder(LoadingActivity.this)
-                        .setTitle("알림")
-                        .setMessage("서버 점검중에 있습니다. 잠시 후 다시 시작해주세요!")
-                        .setCancelable(false)
-                        .setPositiveButton("네", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                android.os.Process.killProcess(android.os.Process.myPid());
-                            }
-                        })
-                        .show();
+                LoadingActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new AlertDialog.Builder(LoadingActivity.this)
+                                .setTitle("알림")
+                                .setMessage("서버 점검중에 있습니다. 잠시 후 다시 시작해주세요!")
+                                .setCancelable(false)
+                                .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        android.os.Process.killProcess(android.os.Process.myPid());
+                                    }
+                                })
+                                .show();
+                    }
+                });
+
             }
         }
     }

@@ -140,7 +140,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
             new GetLocationPoint().execute();
         } catch (Exception e) {
-            DB.sendToast(e.getMessage(), 2);
+            // DB.sendToast(e.getMessage(), 2);
         }
     }
 
