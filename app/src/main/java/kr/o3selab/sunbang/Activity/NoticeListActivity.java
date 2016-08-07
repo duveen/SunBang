@@ -115,7 +115,6 @@ public class NoticeListActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            pd.dismiss();
             new GetNoticeListData(0).execute();
         }
     }
@@ -130,11 +129,6 @@ public class NoticeListActivity extends AppCompatActivity {
 
         public GetNoticeListData(int min) {
             this.min = min * 10;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            pd.show();
         }
 
         @Override
@@ -209,7 +203,6 @@ public class NoticeListActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            pd.dismiss();
             new GetNoticecPageData(currentPage).execute();
         }
     }
@@ -223,11 +216,6 @@ public class NoticeListActivity extends AppCompatActivity {
 
         public GetNoticecPageData(int currentPage) {
             this.currentPage = currentPage;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            pd.show();
         }
 
         @Override
@@ -279,7 +267,6 @@ public class NoticeListActivity extends AppCompatActivity {
             pd.dismiss();
         }
     }
-
 
     @Override
     protected void onResume() {

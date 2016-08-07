@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -45,7 +46,7 @@ import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Layout.MainNoticeLinearLayout;
 import kr.o3selab.sunbang.Layout.MainRoomLinearLayout;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public ProgressDialog pd;
     public SliderLayout mainSliderLayout;
     public FrameLayout locationFrame;
@@ -80,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
 
         // 네비게이션 바 핸들러
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
         ImageView menuButton = (ImageView) findViewById(R.id.activity_main_ic_menu);
 
@@ -122,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         //th.start();
 
 
-        // 이미지 핸들러
+        // 핸들러
         locationFrame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -153,6 +157,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+
 
     }
 
@@ -363,6 +369,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch(id) {
+            case R.id.nav_notice:
+                Intent intent = new Intent(MainActivity.this, NoticeListActivity.class);
+                startActivity(intent);
+                break;
+
+            default:
+                break;
+        }
+
+
+
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
     protected void onStop() {
         mainSliderLayout.stopAutoCycle();
         super.onStop();
@@ -375,6 +403,12 @@ public class MainActivity extends AppCompatActivity {
         // DB 정보 업데이트
         DB.context = this;
         DB.activity = this;
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        int size = navigationView.getMenu().size();
+        for (int i = 0; i < size; i++) {
+            navigationView.getMenu().getItem(i).setChecked(false);
+        }
 
     }
 
