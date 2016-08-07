@@ -80,16 +80,21 @@ public class MainActivity extends AppCompatActivity {
 
         // 네비게이션 바 핸들러
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        final NavigationView drawerView = (NavigationView) findViewById(R.id.nav_view);
-        ImageView menuButton = (ImageView) findViewById(R.id.activity_main_ic_menu);
 
+        ImageView menuButton = (ImageView) findViewById(R.id.activity_main_ic_menu);
 
         menuButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawer.openDrawer(Gravity.START);
+                if (drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.closeDrawer(GravityCompat.START);
+                } else {
+                    drawer.openDrawer(GravityCompat.START);
+                }
+
             }
         });
+
 
         // 데이터 처리
         pd = new ProgressDialog(this);
@@ -164,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
 
                         Iterator<String> itr = mainImages.keySet().iterator();
 
-                        while(itr.hasNext()) {
+                        while (itr.hasNext()) {
                             final String link = itr.next();
                             DefaultSliderView textSliderView = new DefaultSliderView(MainActivity.this);
 

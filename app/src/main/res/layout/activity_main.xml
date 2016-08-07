@@ -1,53 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.DrawerLayout
+<!-- The main content view -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:openDrawer="start"  >
+    android:orientation="vertical">
 
-    <!-- The main content view -->
-    <LinearLayout
+    <!--상단 메뉴바-->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#5f84ce">
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/activity_main_ic_menu"
+            android:layout_gravity="left|center_vertical"
+            android:src="@drawable/main_menu_ic"
+            android:padding="10dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="선문대 방값"
+            android:id="@+id/textView"
+            android:layout_gravity="center"
+            android:textStyle="bold"
+            android:textColor="#ffffff" />
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/activity_main_ic_search"
+            android:layout_gravity="right|center_vertical"
+            android:src="@drawable/ic_search_black"
+            android:padding="10dp"/>
+    </FrameLayout>
+
+    <android.support.v4.widget.DrawerLayout
+
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <!--상단 메뉴바-->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_gravity="center_horizontal"
-            android:background="#5f84ce">
-
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:id="@+id/activity_main_ic_menu"
-                android:layout_gravity="left|center_vertical"
-                android:src="@drawable/main_menu_ic"
-                android:padding="10dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:text="선문대 방값"
-                android:id="@+id/textView"
-                android:layout_gravity="center"
-                android:textStyle="bold"
-                android:textColor="#ffffff" />
-
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:id="@+id/activity_main_ic_search"
-                android:layout_gravity="right|center_vertical"
-                android:src="@drawable/ic_search_black"
-                android:padding="10dp"/>
-        </FrameLayout>
+        tools:openDrawer="start"  >
 
         <!--메인 스크롤 컨텐츠-->
         <ScrollView
@@ -261,16 +261,18 @@
 
             </LinearLayout>
         </ScrollView>
-    </LinearLayout>
 
-    <!-- The navigation drawer -->
-    <android.support.design.widget.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header_main"
-        app:menu="@menu/activity_main_drawer" />
+        <!-- The navigation drawer -->
+        <android.support.design.widget.NavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            app:headerLayout="@layout/nav_header_main"
+            app:menu="@menu/activity_main_drawer" />
 
-</android.support.v4.widget.DrawerLayout>
+    </android.support.v4.widget.DrawerLayout>
+</LinearLayout>
+
+
+

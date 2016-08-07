@@ -204,10 +204,10 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         @Override
         public void run() {
             try {
-                getPhoneData();
-
                 URL url = new URL("http://sunbang.o3selab.kr/version.txt");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setConnectTimeout(3000);
+                con.setReadTimeout(3000);
 
                 InputStream is = con.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
@@ -216,9 +216,8 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     throw new Exception("서버연결에 실패했습니다. 프로그램을 종료합니다.");
                 }
 
-
                 if (DB.version != Double.parseDouble(br.readLine())) {
-                    // DB.sendToast("버전 이 다름", 1);
+                    // 버전이 틀릴 경우
                     LoadingActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -259,14 +258,23 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                         }
                     });
                 } else {
-                    // DB.sendToast("버전이 일치함", 1);
+                    // 버전이 일치할 경우
                     Thread th = new Thread(new GetMainImageData());
                     th.start();
                 }
 
             } catch (Exception e) {
-                DB.sendToast(e.getMessage(), 2);
-                LoadingActivity.this.finish();
+                new AlertDialog.Builder(LoadingActivity.this)
+                        .setTitle("알림")
+                        .setMessage("서버 점검중에 있습니다. 잠시 후 다시 시작해주세요!")
+                        .setCancelable(false)
+                        .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                android.os.Process.killProcess(android.os.Process.myPid());
+                            }
+                        })
+                        .show();
             }
         }
     }
@@ -333,9 +341,13 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         public void run() {
             try {
                 // =======================================
+                //   휴대폰 정보 수집
+                // =======================================
+                getPhoneData();
+
+                // =======================================
                 //   메인 이미지 수집
                 // =======================================
-                // DB.sendToast("이미지 로딩중", 1);
                 HashMap<String, String> mainImages = new HashMap<>();
 
                 URL url = new URL("http://sunbang.o3selab.kr/script/getMainImageLink.php");
