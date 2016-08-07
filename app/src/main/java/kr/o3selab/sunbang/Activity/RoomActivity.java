@@ -6,6 +6,9 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,6 +25,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +40,7 @@ import net.daum.mf.map.api.MapView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -89,6 +94,10 @@ public class RoomActivity extends AppCompatActivity {
     public EditText evaluateTextField;
     public Button evaluateCommitButton;
     public LinearLayout evaluateContentLayout;
+
+    public RatingBar ratingBar;
+    public TextView ratingAverage;
+    public TextView ratingSendButton;
 
     public FrameLayout contactLayout;
 
@@ -149,13 +158,21 @@ public class RoomActivity extends AppCompatActivity {
         evaluateCommitButton = (Button) findViewById(R.id.activity_room_evaluate_commit);
         evaluateContentLayout = (LinearLayout) findViewById(R.id.acivity_room_evaluate_content);
 
+        ratingBar = (RatingBar) findViewById(R.id.activity_room_rating_bar);
+        ratingAverage = (TextView) findViewById(R.id.activity_room_rating_average);
+        ratingSendButton = (TextView) findViewById(R.id.activity_room_rating_send_button);
+
         contactLayout = (FrameLayout) findViewById(R.id.activity_room_contact);
+
 
         // 데이터 로딩..
         new GetRoomImagesSliderData().execute();
         new GetRoomContentData().execute();
         new GetRoomOptionalData().execute();
-        new getEvaluateData().execute();
+        new GetAverageRatingData().execute();
+        new GetPersonalRatingData().execute();
+        new GetEvaluateData().execute();
+
 
         // 버튼 핸들러
         evaluateCommitButton.setOnClickListener(new View.OnClickListener() {
@@ -173,7 +190,7 @@ public class RoomActivity extends AppCompatActivity {
                     return;
                 }
 
-                new sendEvaluateData(evaluateCommitButton).execute(content);
+                new SendEvaluateData(evaluateCommitButton).execute(content);
             }
         });
 
@@ -185,6 +202,23 @@ public class RoomActivity extends AppCompatActivity {
         });
 
         roomTopNumber.setText("방 번호 : " + roomSrl);
+
+        ratingSendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(RoomActivity.this)
+                        .setTitle("알림")
+                        .setMessage("별점을 제출하시겠습니까?")
+                        .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                new SendRatingData(ratingBar.getRating(), ratingSendButton, ratingSendButton.getText()).execute();
+                            }
+                        })
+                        .setNegativeButton("아니오", null)
+                        .show();
+            }
+        });
     }
 
     @Override
@@ -661,13 +695,164 @@ public class RoomActivity extends AppCompatActivity {
 
 
     // =======================================
+    //   별점평가 전송 핸들러
+    // =======================================
+    public class SendRatingData extends AsyncTask<Void, Void, Void> {
+        public Float rating;
+        public TextView sendButton;
+        public CharSequence text;
+
+        public SendRatingData(Float rating, TextView sendButton, CharSequence text) {
+            this.rating = rating;
+            this.sendButton = sendButton;
+            this.text = text;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            sendButton.setEnabled(false);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            try {
+
+                URL url = null;
+
+                switch((String) text) {
+                    case "제출":
+                        url = new URL("http://sunbang.o3selab.kr/script/sendFirstRatingData.php?" +
+                                "srl=" + roomSrl +
+                                "&pn=" + DB.phone_number +
+                                "&rate=" + rating);
+                        break;
+                    case "수정":
+                        url = new URL("http://sunbang.o3selab.kr/script/sendModRatingData.php?" +
+                                "rate=" + rating +
+                                "&pn=" + DB.phone_number);
+                        break;
+                }
+
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
+                if (br.readLine().contains("TRUE")) {
+                    DB.sendToast("제출완료", 1);
+                } else {
+                    DB.sendToast("제출실패", 2);
+                }
+
+            } catch (Exception e) {
+                DB.sendToast("제출실패:" + e.getMessage(), 2);
+                //e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            sendButton.setEnabled(true);
+            new GetAverageRatingData().execute();
+            new GetPersonalRatingData().execute();
+        }
+    }
+
+
+    // =======================================
+    //   평균 별점정보 불러오기 핸들러
+    // =======================================
+    public class GetAverageRatingData extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            try {
+                URL url = new URL("http://sunbang.o3selab.kr/script/getAverageRatingData.php?srl=" + roomSrl);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                JSONObject obj = jsonArray.getJSONObject(0);
+
+                final Double rate = Math.ceil(obj.getDouble("rate")/0.5)*0.5;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() { ratingAverage.setText("평균 : " + rate); }
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ratingAverage.setText("평가없음");
+                    }
+                });
+            }
+            return null;
+        }
+    }
+
+
+    // =======================================
+    //   개인 별점정보 불러오기 핸들러
+    // =======================================
+    public class GetPersonalRatingData extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                URL url = new URL("http://sunbang.o3selab.kr/script/getPersonalRatingData.php?srl=" + roomSrl + "&pn=" + DB.phone_number);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while ((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                JSONObject obj = jsonArray.getJSONObject(0);
+
+                final Float pRate = Float.parseFloat(obj.getDouble("rate") + "");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ratingBar.setRating(pRate);
+                        ratingSendButton.setText("수정");
+                    }
+                });
+            } catch (Exception e) {
+
+            }
+
+            return null;
+        }
+    }
+
+
+    // =======================================
     //   평가하기 전송 핸들러
     // =======================================
-    public class sendEvaluateData extends AsyncTask<String, Void, Void> {
+    public class SendEvaluateData extends AsyncTask<String, Void, Void> {
 
         public Button button;
 
-        public sendEvaluateData(Button b) {
+        public SendEvaluateData(Button b) {
             this.button = b;
         }
 
@@ -707,7 +892,7 @@ public class RoomActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            new getEvaluateData().execute();
+            new GetEvaluateData().execute();
             evaluateTextField.setText("");
             button.setEnabled(true);
         }
@@ -718,7 +903,7 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   한줄평가 리스트 로딩 핸들러
     // =======================================
-    public class getEvaluateData extends AsyncTask<Void, Void, Void> {
+    public class GetEvaluateData extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
 
@@ -772,6 +957,6 @@ public class RoomActivity extends AppCompatActivity {
     //   한줄평가 리스트 로딩 메소드
     // =======================================
     public void getEvaluateDataMethod() {
-        new getEvaluateData().execute();
+        new GetEvaluateData().execute();
     }
 }
