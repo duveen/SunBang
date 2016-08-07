@@ -194,8 +194,13 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                             marker.setTag(Integer.parseInt(srl));
                             marker.setMapPoint(MapPoint.mapPointWithGeoCoord(lat, lng));
                             marker.setShowCalloutBalloonOnTouch(true);
-                            marker.setMarkerType(MapPOIItem.MarkerType.BluePin); // 기본으로 제공하는 BluePin 마커 모양.
-                            marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin); // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
+                            marker.setMarkerType(MapPOIItem.MarkerType.CustomImage);
+                            marker.setSelectedMarkerType(MapPOIItem.MarkerType.CustomImage);
+                            marker.setCustomImageResourceId(R.drawable.map_icon);
+                            marker.setCustomSelectedImageResourceId(R.drawable.map_icon_selected);
+                            marker.setCustomImageAutoscale(true);
+                            marker.setCustomImageAnchor(0.5f, 1.0f);
+
                             mapView.addPOIItem(marker);
                         }
                     });

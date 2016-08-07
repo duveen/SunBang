@@ -598,9 +598,13 @@ public class RoomActivity extends AppCompatActivity {
                             MapPOIItem marker = new MapPOIItem();
                             marker.setTag(0);
                             marker.setMapPoint(point);
-                            marker.setMarkerType(MapPOIItem.MarkerType.BluePin); // 기본으로 제공하는 BluePin 마커 모양.
                             marker.setItemName(roomTopTitle.getText().toString());
-                            marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+                            marker.setMarkerType(MapPOIItem.MarkerType.CustomImage);
+                            marker.setSelectedMarkerType(MapPOIItem.MarkerType.CustomImage);
+                            marker.setCustomImageResourceId(R.drawable.map_icon);
+                            marker.setCustomSelectedImageResourceId(R.drawable.map_icon_selected);
+                            marker.setCustomImageAutoscale(true);
+                            marker.setCustomImageAnchor(0.5f, 1.0f);
 
                             mapView.addPOIItem(marker);
                         }
