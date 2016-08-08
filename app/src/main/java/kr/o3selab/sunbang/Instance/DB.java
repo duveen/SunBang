@@ -59,17 +59,16 @@ public class DB {
     //설정 정보
     public static String MY_SHARED_PREF = "my_shared";
     public static SharedPreferences sharedPreferences;
-
     public static SharedPreferences getSharedPreferences() {
         sharedPreferences = context.getSharedPreferences(MY_SHARED_PREF, context.MODE_PRIVATE);
         return sharedPreferences;
     }
-
     public static SharedPreferences.Editor editor;
-
     public static SharedPreferences.Editor getEditor() {
         editor = getSharedPreferences().edit();
         return editor;
     }
 
+    //베이스 URL
+    public final static String BASE_URL = "http://sunbang.o3selab.kr";
 }

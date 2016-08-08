@@ -6,18 +6,17 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
+
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,15 +30,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Vector;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.MainActivity;
 import kr.o3selab.sunbang.R;
 
 public class LoadingActivity extends AppCompatActivity implements DialogInterface.OnClickListener {
-    public final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +46,13 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
         DB.context = this;
         DB.activity = this;
+
         try {
             getPermission();
         } catch (Exception e) {
             DB.sendToast(e.getMessage(), 2);
         }
+
     }
 
     @Override
@@ -86,59 +86,31 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     public void onBackPressed() {
     }
 
-
     // =======================================
     //   퍼미션 권한 획득
     // =======================================
     public void getPermission() {
-        if (ContextCompat.checkSelfPermission(LoadingActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(LoadingActivity.this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(LoadingActivity.this,
-                Manifest.permission.READ_PHONE_STATE)
-                != PackageManager.PERMISSION_GRANTED
-                ) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(LoadingActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                DB.sendToast("슬라이더 이미지를 불러오기 위해 필요한 권한입니다.", 2);
+        PermissionListener permissionListener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                NetworkCheck();
             }
 
-            ActivityCompat.requestPermissions(LoadingActivity.this,
-                    new String[]{
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                            , Manifest.permission.READ_EXTERNAL_STORAGE
-                            , Manifest.permission.READ_PHONE_STATE
-                    },
-
-                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-        } else {
-            NetworkCheck();
-        }
-    }
-
-
-    // =======================================
-    //   퍼미션 획득 결과 핸들러
-    // =======================================
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    NetworkCheck();
-                } else {
-                    DB.sendToast("권한을 획득하지 못해 프로그램을 종료합니다. 다시 실행시켜주세요!", 2);
-                    LoadingActivity.this.finish();
-                }
-                return;
+            @Override
+            public void onPermissionDenied(ArrayList<String> arrayList) {
+                DB.sendToast("권한을 획득하지 못해 프로그램을 종료합니다. 다시 실행시켜주세요!", 2);
+                LoadingActivity.this.finish();
             }
-        }
+        };
+
+        new TedPermission(this)
+                .setPermissionListener(permissionListener)
+                .setRationaleMessage("메인 화면 구성을 위해서 필요한 권한 입니다.")
+                .setDeniedMessage("권한이 없습니다. 프로그램을 다시 실행 해주세요!")
+                .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_PHONE_STATE)
+                .check();
     }
 
 
@@ -212,7 +184,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 InputStream is = con.getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
 
-                if(!(con.getResponseCode() == 200)) {
+                if (!(con.getResponseCode() == 200)) {
                     throw new Exception("서버연결에 실패했습니다. 프로그램을 종료합니다.");
                 }
 
