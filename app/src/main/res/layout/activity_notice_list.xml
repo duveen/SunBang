@@ -27,12 +27,14 @@
             android:singleLine="true" />
 
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:id="@+id/notice_activity_ic_undo"
             android:layout_gravity="left|center_vertical"
             android:src="@drawable/ic_undo"
-            android:layout_marginLeft="10dp" />
+            android:padding="5dp"
+            android:tint="#ffffff"
+            android:layout_marginLeft="5dp" />
 
 
     </FrameLayout>

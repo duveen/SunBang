@@ -69,6 +69,6 @@ public class DB {
         return editor;
     }
 
-    //베이스 URL
+    //베이스
     public final static String BASE_URL = "http://sunbang.o3selab.kr";
 }

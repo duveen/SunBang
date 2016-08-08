@@ -34,6 +34,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public ProgressDialog pd;
     public MapView mapView;
     public ImageView undoIc;
+    public ImageView selectIc;
     public final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
 
     @Override
@@ -49,6 +50,14 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             @Override
             public void onClick(View v) {
                 AllFindRoomActivity.this.finish();
+            }
+        });
+
+        selectIc = (ImageView) findViewById(R.id.activity_all_find_ic_select);
+        selectIc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
@@ -270,7 +279,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     }
 
 
-
     // =======================================
     //   미사용 콜백 메소드
     // =======================================
@@ -280,6 +288,23 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem) {  }
     @Override
     public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {  }
+
+
+    // =======================================
+    //   리스트 정보 불러오기 메소드
+    // =======================================
+
+    public class GetRoomListByOrder extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            // URL url = DB.BASE_URL +
+
+
+            return null;
+        }
+    }
+
 
 
 }

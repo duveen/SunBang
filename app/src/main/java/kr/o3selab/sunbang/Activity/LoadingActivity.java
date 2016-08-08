@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.gun0912.tedpermission.PermissionListener;
@@ -34,6 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.JsonHandler;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.MainActivity;
 import kr.o3selab.sunbang.R;
 
@@ -60,16 +63,16 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
         switch (i) {
             case AlertDialog.BUTTON_POSITIVE:
-                Toast.makeText(this, "계속 진행합니다.", Toast.LENGTH_SHORT).show();
+                DB.sendToast("계속 진행합니다.", 1);
                 Thread th = new Thread(new GetVersionData());
                 th.start();
                 break;
             case AlertDialog.BUTTON_NEGATIVE:
-                Toast.makeText(this, "프로그램을 종료합니다.", Toast.LENGTH_SHORT).show();
+                DB.sendToast("프로그램을 종료합니다.", 2);
                 this.finish();
                 break;
             default:
-                Toast.makeText(this, "에러", Toast.LENGTH_SHORT).show();
+                DB.sendToast("에러", 2);
                 break;
         }
     }
@@ -93,7 +96,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         PermissionListener permissionListener = new PermissionListener() {
             @Override
             public void onPermissionGranted() {
-                NetworkCheck();
+                networkCheck();
             }
 
             @Override
@@ -117,7 +120,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     // =======================================
     //   네트워크 체크
     // =======================================
-    public void NetworkCheck() {
+    public void networkCheck() {
 
         ConnectivityManager manager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mobile = manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE); // 3G나 LTE등 데이터 네트워크에 연결된 상태
@@ -143,29 +146,6 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     .setCancelable(false)
                     .show();
         }
-
-
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                while (true) {
-                    if (DB.firstData) {
-                        Intent i = new Intent(LoadingActivity.this, MainActivity.class);
-                        startActivity(i);
-                        LoadingActivity.this.finish();
-                        break;
-                    } else {
-                        try {
-                            Thread.currentThread().sleep(1000);
-                        } catch (InterruptedException e) {
-                            DB.sendToast(e.getMessage(), 2);
-                        }
-                    }
-                }
-            }
-        };
-
-        thread.start();
     }
 
 
@@ -176,21 +156,17 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         @Override
         public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/version.txt");
+                URL url = new URL(URLP.VERSION);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestProperty("Content-type", "text/plain");
                 con.setConnectTimeout(3000);
                 con.setReadTimeout(3000);
 
-                InputStream is = con.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
 
-                if (!(con.getResponseCode() == 200)) {
-                    throw new Exception("서버연결에 실패했습니다. 프로그램을 종료합니다.");
-                }
-
-                if (DB.version != Double.parseDouble(br.readLine())) {
+                if (!br.readLine().contains(DB.version + "")) {
                     // 버전이 틀릴 경우
-                    LoadingActivity.this.runOnUiThread(new Runnable() {
+                    runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             new AlertDialog.Builder(LoadingActivity.this)
@@ -200,48 +176,36 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                                     .setPositiveButton("네", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
-                                            LoadingActivity.this.runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
-                                                    try {
-                                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                                                    } catch (android.content.ActivityNotFoundException anfe) {
-                                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                                                    }
-                                                    LoadingActivity.this.finish();
-                                                }
-                                            });
+                                            final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
+                                            try {
+                                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                                            } catch (android.content.ActivityNotFoundException anfe) {
+                                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                                            }
+                                            LoadingActivity.this.finish();
                                         }
                                     })
                                     .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
-                                            LoadingActivity.this.runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Toast.makeText(LoadingActivity.this, "프로그램을 종료합니다!", Toast.LENGTH_SHORT).show();
-                                                    LoadingActivity.this.finish();
-                                                }
-                                            });
+                                            DB.sendToast("프로그램을 종료합니다!", 1);
+                                            LoadingActivity.this.finish();
                                         }
                                     })
                                     .show();
                         }
                     });
                 } else {
-                    // 버전이 일치할 경우
-                    Thread th = new Thread(new GetMainImageData());
-                    th.start();
+                    // 버전이 일치 할 경우
+                    getPhoneData();
                 }
-
             } catch (Exception e) {
-                LoadingActivity.this.runOnUiThread(new Runnable() {
+                runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         new AlertDialog.Builder(LoadingActivity.this)
                                 .setTitle("알림")
-                                .setMessage("서버 점검중에 있습니다. 잠시 후 다시 시작해주세요!")
+                                .setMessage("서버가 점검중 입니다.\n잠시 후 다시 시작해주세요!")
                                 .setCancelable(false)
                                 .setPositiveButton("네", new DialogInterface.OnClickListener() {
                                     @Override
@@ -252,7 +216,6 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                                 .show();
                     }
                 });
-
             }
         }
     }
@@ -262,51 +225,65 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     //   휴대폰 정보 수집
     // =======================================
     public void getPhoneData() {
-        TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+        try {
+            TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
 
-        String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
-        String mPhoneNumber = tMgr.getLine1Number();
+            String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
+            String mPhoneNumber = tMgr.getLine1Number();
 
-        mPhoneNumber = mPhoneNumber.replace("+82", "0");
+            mPhoneNumber = mPhoneNumber.replace("+82", "0");
 
-        SharedPreferences sharedPreferences = DB.getSharedPreferences();
-        if (!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID) ||
-                !sharedPreferences.getString(DB.DEVICE_ID, "").equals(mPhoneNumber)) {
+            SharedPreferences sharedPreferences = DB.getSharedPreferences();
+            if (!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID) ||
+                    !sharedPreferences.getString(DB.DEVICE_ID, "").equals(mPhoneNumber)) {
 
-            SharedPreferences.Editor editor = DB.getEditor();
-            editor.putString(DB.DEVICE_ID, mID);
-            editor.putString(DB.PHONE_NUMBER, mPhoneNumber);
-            editor.commit();
+                SharedPreferences.Editor editor = DB.getEditor();
+                editor.putString(DB.DEVICE_ID, mID);
+                editor.putString(DB.PHONE_NUMBER, mPhoneNumber);
+                editor.commit();
 
-            sendPhoneData(mID, mPhoneNumber);
+                Thread th = new Thread(new SendPhoneData(mID, mPhoneNumber));
+                th.start();
+            }
+
+            DB.device_id = mID;
+            DB.phone_number = mPhoneNumber;
+
+            Thread th = new Thread(new GetMainImageData());
+            th.start();
+        } catch (Exception e) {
+            DB.sendToast("에러: " + e.getMessage(), 2);
+            DB.sendToast("프로그램을 종료합니다.", 2);
+
+            LoadingActivity.this.finish();
         }
-
-        DB.device_id = mID;
-        DB.phone_number = mPhoneNumber;
     }
 
 
     // =======================================
     //   휴대폰 정보 전송
     // =======================================
-    public void sendPhoneData(String mID, String mPhoneNumber) {
-        try {
-            URL url = new URL("http://sunbang.o3selab.kr/script/sendUserData.php?mId=" + mID + "&phone=" + mPhoneNumber);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+    public class SendPhoneData implements Runnable {
 
-            InputStream is = con.getInputStream();
+        private String mID;
+        private String mPhoneNumber;
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-            if (br.readLine().equals("TRUE")) {
+        public SendPhoneData(String mID, String mPhoneNumber) {
+            this.mID = mID;
+            this.mPhoneNumber = mPhoneNumber;
+        }
 
-            } else {
-
+        @Override
+        public void run() {
+            try {
+                String param = "mId=" + mID + "&phone=" + mPhoneNumber;
+                String result = new JsonHandler(URLP.SEND_USER_DATA, param).execute().get();
+                if(!result.equals("TRUE")) {
+                    Log.e("error", result);
+                }
+            } catch (Exception e) {
+                DB.sendToast(e.getMessage(), 2);
             }
-
-            br.close();
-
-        } catch (Exception e) {
-            DB.sendToast(e.getMessage(), 2);
         }
     }
 
@@ -315,32 +292,15 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
     //   메인 이미지 수집
     // =======================================
     public class GetMainImageData implements Runnable {
+
         @Override
         public void run() {
             try {
-                // =======================================
-                //   휴대폰 정보 수집
-                // =======================================
-                getPhoneData();
-
-                // =======================================
-                //   메인 이미지 수집
-                // =======================================
                 HashMap<String, String> mainImages = new HashMap<>();
 
-                URL url = new URL("http://sunbang.o3selab.kr/script/getMainImageLink.php");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String result = new JsonHandler(URLP.GET_MAIN_IMAGE_LINK, null).execute().get();
 
-                InputStream is = con.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("utf-8")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 for (int i = 0; i < jsonArray.length(); i++) {
@@ -352,16 +312,19 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 }
 
                 DB.mainImages = mainImages;
-                DB.firstData = true;
-
-            } catch (MalformedURLException e) {
-                DB.sendToast("연결 실패." + e.getMessage(), 2);
-            } catch (IOException e) {
-                DB.sendToast("서버 접속 실패." + e.getMessage(), 2);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        LoadingActivity.this.finish();
+                    }
+                });
             } catch (JSONException e) {
-                DB.sendToast("데이터 오류" + e.getMessage(), 2);
+                DB.sendToast("데이터 오류: " + e.getMessage(), 2);
+            } catch (Exception e) {
+                DB.sendToast("알수없는 오류: " + e.getMessage(), 2);
             }
         }
     }
-
 }

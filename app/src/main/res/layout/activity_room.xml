@@ -28,12 +28,14 @@
             android:id="@+id/room_activity_title" />
 
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:id="@+id/room_activity_ic_undo"
             android:layout_gravity="left|center_vertical"
             android:src="@drawable/ic_undo"
-            android:layout_marginLeft="10dp" />
+            android:layout_marginLeft="5dp"
+            android:tint="#ffffff"
+            android:padding="5dp" />
 
     </FrameLayout>
 

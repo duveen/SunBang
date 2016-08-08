@@ -27,12 +27,14 @@
             android:gravity="center"
             android:id="@+id/activity_search_title" />
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:id="@+id/activity_search_ic_undo"
             android:layout_gravity="left|center_vertical"
             android:src="@drawable/ic_undo"
-            android:layout_marginLeft="10dp" />
+            android:layout_marginLeft="5dp"
+            android:padding="5dp"
+            android:tint="#ffffff" />
     </FrameLayout>
 
     <ScrollView

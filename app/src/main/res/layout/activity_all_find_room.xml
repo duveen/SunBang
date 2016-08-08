@@ -26,13 +26,32 @@
             android:layout_marginRight="40dp"
             android:gravity="center" />
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:id="@+id/activity_all_find_ic_undo"
             android:layout_gravity="left|center_vertical"
             android:src="@drawable/ic_undo"
-            android:layout_marginLeft="10dp" />
+            android:layout_marginLeft="5dp"
+            android:padding="5dp"
+            android:tint="#ffffff" />
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/activity_all_find_ic_select"
+            android:layout_gravity="right|center_vertical"
+            android:src="@drawable/ic_view_list"
+            android:focusableInTouchMode="false"
+            android:tint="#ffffff"
+            android:padding="7dp"
+            android:layout_marginTop="1dp" />
     </FrameLayout>
+
+    <!--진한 라인-->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#4c6aa5"/>
 
     <!--지도 컨텐츠-->
     <RelativeLayout

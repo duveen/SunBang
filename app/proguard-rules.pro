@@ -19,3 +19,10 @@
 -dontwarn com.squareup.okhttp.**, com.squareup.picasso.**
 -keep class net.daum.** { *; }
 -keep class me.grantland.** { *; }
+
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep public enum com.bumptech.glide.load.resource.bitmap.ImageHeaderParser$** {
+  **[] $VALUES;
+  public *;
+}
+-keepresourcexmlelements manifest/application/meta-data@value=GlideModule
