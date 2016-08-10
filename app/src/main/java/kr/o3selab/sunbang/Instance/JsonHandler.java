@@ -42,7 +42,6 @@ public class JsonHandler extends AsyncTask<Void, Void, String> {
             con.setDoOutput(true);
             con.setDoInput(true);
 
-
             if(param != null) {
                 OutputStream os = con.getOutputStream();
                 os.write(param.getBytes("euc-kr"));

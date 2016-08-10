@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,10 +18,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.JsonHandler;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.Layout.SearchResultLinearLayout;
 import kr.o3selab.sunbang.R;
 
@@ -28,7 +32,6 @@ public class SearchActivity extends AppCompatActivity {
 
     public LinearLayout resultLayout;
     public EditText textField;
-    public GetSearchResult task;
     public ImageView undoIc;
     public Button btn;
 
@@ -40,7 +43,6 @@ public class SearchActivity extends AppCompatActivity {
         DB.context = this;
         DB.activity = this;
 
-        task = new GetSearchResult();
         resultLayout = (LinearLayout) findViewById(R.id.activity_search_result);
         textField = (EditText) findViewById(R.id.activity_search_textfield);
         btn = (Button) findViewById(R.id.activity_search_button);
@@ -49,12 +51,15 @@ public class SearchActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean check = Pattern.matches("^[ㄱ-ㅎ가-힣0-9a-zA-Z ]*$", textField.getText().toString());
-                if (check) {
-                    new GetSearchResult().execute(textField.getText().toString());
-                } else {
-                    DB.sendToast("경고! 한글, 영어, 숫자만 입력 가능합니다!", 1);
-                }
+                getResultData();
+            }
+        });
+
+        textField.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                getResultData();
+                return false;
             }
         });
 
@@ -66,6 +71,16 @@ public class SearchActivity extends AppCompatActivity {
         });
     }
 
+    public void getResultData() {
+        boolean check = Pattern.matches("^[ㄱ-ㅎ가-힣0-9a-zA-Z ]*$", textField.getText().toString());
+        if (check) {
+            Thread th = new Thread(new GetSearchResult(textField.getText().toString()));
+            th.start();
+        } else {
+            DB.sendToast("경고! 한글, 영어, 숫자만 입력 가능합니다!", 1);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -73,23 +88,21 @@ public class SearchActivity extends AppCompatActivity {
         DB.activity = this;
     }
 
-    public class GetSearchResult extends AsyncTask<String, Void, Void> {
+    public class GetSearchResult implements Runnable {
+
+        public String params;
+
+        public GetSearchResult(String params) {
+            this.params = params;
+        }
 
         @Override
-        protected Void doInBackground(String... params) {
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getSearchResultData.php?id=171&query=" + params[0]);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String query = URLEncoder.encode(params, "utf-8");
+                String param = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE + "&query=" + query;
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-                StringBuilder sb = new StringBuilder();
-
-                String line;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                br.close();
+                String result = new JsonHandler(URLP.SEARCH_RESULT_DATA, param).execute().get();
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -98,7 +111,7 @@ public class SearchActivity extends AppCompatActivity {
                     }
                 });
 
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 for (int i = 0; i < jsonArray.length(); i++) {
@@ -124,10 +137,8 @@ public class SearchActivity extends AppCompatActivity {
                     });
                 }
             } catch (Exception e) {
-                DB.sendToast("에러 발생!", 2);
+                DB.sendToast("에러: " + e.getMessage(), 2);
             }
-            return null;
         }
-
     }
 }

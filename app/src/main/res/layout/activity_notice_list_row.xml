@@ -18,7 +18,7 @@
         android:layout_weight="0" />
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="제목 테스트트으으으~~~ 더 길게에에에~~"

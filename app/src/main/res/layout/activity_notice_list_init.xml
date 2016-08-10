@@ -15,7 +15,6 @@
         android:layout_height="wrap_content"
         android:layout_weight="0"
         android:gravity="center"
-        android:paddingLeft="10dp"
         android:paddingRight="10dp"
         android:text="번호"
         android:textAppearance="?android:attr/textAppearanceSmall" />
@@ -40,7 +39,8 @@
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
         android:text="글쓴이"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_marginRight="5dp" />
 
     <TextView
         android:id="@+id/notice_list_regdate"

@@ -11,6 +11,7 @@ import java.util.HashMap;
  * Created by samgi.park on 2016-07-29.
  */
 public class DB {
+
     //버전 정보
     public static double version = 1.0006;
 
@@ -21,11 +22,8 @@ public class DB {
     public static String phone_number = "";
 
     //모듈 정보
-    public static Integer notice = 139;
-    public static Integer room = 171;
-
-    //로딩 데이터 플래그
-    public static boolean firstData = false;
+    public static Integer NOTICE_MODULE = 139;
+    public static Integer ROOM_MODULE = 171;
 
     //컨텍스트, 액티비티
     public static Context context;
@@ -69,6 +67,5 @@ public class DB {
         return editor;
     }
 
-    //베이스
-    public final static String BASE_URL = "http://sunbang.o3selab.kr";
+
 }

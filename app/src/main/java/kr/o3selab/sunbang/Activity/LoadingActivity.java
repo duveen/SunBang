@@ -14,7 +14,6 @@ import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
@@ -24,11 +23,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -231,7 +227,9 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
             String mPhoneNumber = tMgr.getLine1Number();
 
-            mPhoneNumber = mPhoneNumber.replace("+82", "0");
+            if(mPhoneNumber.contains("+82")) {
+                mPhoneNumber = mPhoneNumber.replace("+82", "0");
+            }
 
             SharedPreferences sharedPreferences = DB.getSharedPreferences();
             if (!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID) ||
@@ -282,7 +280,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     Log.e("error", result);
                 }
             } catch (Exception e) {
-                DB.sendToast(e.getMessage(), 2);
+                DB.sendToast("여기니" + e.getMessage(), 2);
             }
         }
     }
@@ -298,7 +296,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             try {
                 HashMap<String, String> mainImages = new HashMap<>();
 
-                String result = new JsonHandler(URLP.GET_MAIN_IMAGE_LINK, null).execute().get();
+                String result = new JsonHandler(URLP.MAIN_IMAGE_LIST, null).execute().get();
 
                 JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");

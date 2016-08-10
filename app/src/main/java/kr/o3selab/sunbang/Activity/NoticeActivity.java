@@ -22,6 +22,10 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.JsonHandler;
+import kr.o3selab.sunbang.Instance.SunbangProgress;
+import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.R;
 import me.grantland.widget.AutofitTextView;
 
@@ -56,19 +60,21 @@ public class NoticeActivity extends AppCompatActivity {
 
         // 인텐트 값 수신
         Intent intent = getIntent();
-        String document_id = intent.getStringExtra("document_id");
+        String document_srl = intent.getStringExtra("document_id");
 
 
         // 로딩 창 생성
-        pd = new ProgressDialog(this);
-        pd.setMessage("게시물을 불러오고 있습니다.");
-        pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        pd.setCancelable(false);
+        pd = new SunbangProgress(this);
 
 
         // 데이터 수신
-        new getNoticeData(document_id).execute();
+        Thread getNoticeData = new Thread(new GetNoticeData(document_srl));
+        getNoticeData.start();
 
+        Thread[] noticeGroup = {getNoticeData};
+
+        ThreadGroupHandler threadGroupHandler = new ThreadGroupHandler(noticeGroup, pd);
+        threadGroupHandler.start();
 
         // 버튼 핸들러 설정
         undoIcon.setOnClickListener(new View.OnClickListener() {
@@ -77,40 +83,23 @@ public class NoticeActivity extends AppCompatActivity {
                 NoticeActivity.this.finish();
             }
         });
-
     }
 
-    public class getNoticeData extends AsyncTask<Void, Void, Void> {
+    public class GetNoticeData implements Runnable {
 
-        public String documentId;
+        public String document_srl;
 
-        public getNoticeData(String documentId) {
-            this.documentId = documentId;
+        public GetNoticeData(String document_srl) {
+            this.document_srl = document_srl;
         }
 
         @Override
-        protected void onPreExecute() {
-            pd.show();
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getNoticeContent.php?id=" + documentId);
+                String param = URLP.PARAM_DOCUMENT_SRL + document_srl;
+                String result = new JsonHandler(URLP.NOTICE_DOCUMENT, param).execute().get();
 
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                InputStream is = con.getInputStream();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 JSONObject obj = jsonArray.getJSONObject(0);
@@ -139,16 +128,8 @@ public class NoticeActivity extends AppCompatActivity {
                 });
 
             } catch (Exception e) {
-                DB.sendToast(e.getMessage(), 2);
+                DB.sendToast("에러: " + e.getMessage(), 2);
             }
-
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            pd.dismiss();
         }
     }
 

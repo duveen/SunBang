@@ -167,7 +167,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         protected Void doInBackground(Void... params) {
 
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getAllMapLocation.php?module_srl=" + DB.room);
+                URL url = new URL("http://sunbang.o3selab.kr/script/getAllMapLocation.php?module_srl=" + DB.ROOM_MODULE);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));

@@ -2,14 +2,11 @@ package kr.o3selab.sunbang;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -26,16 +23,9 @@ import com.daimajia.slider.library.SliderTypes.DefaultSliderView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import kr.o3selab.sunbang.Activity.AllFindRoomActivity;
 import kr.o3selab.sunbang.Activity.NoticeActivity;
@@ -43,6 +33,10 @@ import kr.o3selab.sunbang.Activity.NoticeListActivity;
 import kr.o3selab.sunbang.Activity.RoomActivity;
 import kr.o3selab.sunbang.Activity.SearchActivity;
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.JsonHandler;
+import kr.o3selab.sunbang.Instance.SunbangProgress;
+import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.Layout.MainNoticeLinearLayout;
 import kr.o3selab.sunbang.Layout.MainRoomLinearLayout;
 
@@ -55,10 +49,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public LinearLayout mainRoomLayout;
     public TextView mainNoticeTextView;
     public ImageView mainSearchImageView;
-
-    public boolean imageDataFlag = false;
-    public boolean noticeDataFlag = false;
-    public boolean roomDataFlag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mainNoticeTextView = (TextView) findViewById(R.id.main_notice_view);
         mainRoomLayout = (LinearLayout) findViewById(R.id.main_room_layout);
         mainSearchImageView = (ImageView) findViewById(R.id.activity_main_ic_search);
+
 
         // 네비게이션 바 핸들러
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -101,30 +92,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         // 데이터 처리
-        pd = new ProgressDialog(this);
-        pd.setTitle("로딩중..");
-        pd.setMessage("선방 정보를 가져오고 있습니다!.\n잠시만 기다려주세요!");
-        pd.setCancelable(false);
-        pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        //pd.show();
+        pd = new SunbangProgress(this);
 
-        new GetMainImagesSliderData().execute();
-        new GetMainNoticeListData().execute();
-        new GetMainRoomListData().execute();
+        Thread getImageListShowThread = new Thread(new GetImageListShowThread());
+        getImageListShowThread.start();
 
-        Thread th = new Thread() {
-            @Override
-            public void run() {
-                while (true) {
-                    if (imageDataFlag && noticeDataFlag && roomDataFlag) {
-                        pd.dismiss();
-                        break;
-                    }
-                }
-            }
-        };
-        //th.start();
+        Thread getNoticeListDataThread = new Thread(new GetMainNoticeListData());
+        getNoticeListDataThread.start();
 
+        Thread getRoomListDataThread = new Thread(new GetMainRoomListData());
+        getRoomListDataThread.start();
+
+        Thread[] mainGroup = {getImageListShowThread, getNoticeListDataThread, getRoomListDataThread};
+
+        ThreadGroupHandler threadGroupHandler = new ThreadGroupHandler(mainGroup, pd);
+        threadGroupHandler.start();
 
         // 핸들러
         locationFrame.setOnClickListener(new View.OnClickListener() {
@@ -157,111 +139,79 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
             }
         });
-
-
-
     }
 
     // 메인 이미지 슬라이더 로딩 핸들러
-    public class GetMainImagesSliderData extends AsyncTask<Void, Void, Void> {
+    public class GetImageListShowThread implements Runnable {
 
         @Override
-        protected Void doInBackground(Void... voids) {
-            try {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        final HashMap<String, String> mainImages = DB.mainImages;
+        public void run() {
+            final HashMap<String, String> mainImages = DB.mainImages;
 
-                        Iterator<String> itr = mainImages.keySet().iterator();
+            final Iterator<String> itr = mainImages.keySet().iterator();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    while (itr.hasNext()) {
+                        final String link = itr.next();
+                        DefaultSliderView textSliderView = new DefaultSliderView(MainActivity.this);
 
-                        while (itr.hasNext()) {
-                            final String link = itr.next();
-                            DefaultSliderView textSliderView = new DefaultSliderView(MainActivity.this);
+                        textSliderView
+                                .image(link)
+                                .setScaleType(BaseSliderView.ScaleType.Fit)
+                                .setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
+                                    @Override
+                                    public void onSliderClick(BaseSliderView slider) {
+                                        String href = mainImages.get(link);
+                                        StringTokenizer st = new StringTokenizer(href, ":");
 
-                            textSliderView
-                                    .image(link)
-                                    .setScaleType(BaseSliderView.ScaleType.Fit)
-                                    .setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
-                                        @Override
-                                        public void onSliderClick(BaseSliderView slider) {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    String href = mainImages.get(link);
-                                                    StringTokenizer st = new StringTokenizer(href, ":");
+                                        String protocol = st.nextToken();
+                                        String value = st.nextToken();
 
-                                                    String protocol = st.nextToken();
-                                                    String value = st.nextToken();
+                                        Intent intent;
+                                        switch (protocol) {
+                                            case "notice":
+                                                intent = new Intent(MainActivity.this, NoticeActivity.class);
+                                                intent.putExtra("document_id", value);
+                                                startActivity(intent);
+                                                break;
 
-                                                    Intent intent;
-                                                    switch (protocol) {
-                                                        case "notice":
-                                                            intent = new Intent(MainActivity.this, NoticeActivity.class);
-                                                            intent.putExtra("document_id", value);
-                                                            startActivity(intent);
-                                                            break;
+                                            case "room":
+                                                intent = new Intent(MainActivity.this, RoomActivity.class);
+                                                intent.putExtra("srl", value);
+                                                startActivity(intent);
+                                                break;
 
-                                                        case "room":
-                                                            intent = new Intent(MainActivity.this, RoomActivity.class);
-                                                            intent.putExtra("srl", value);
-                                                            startActivity(intent);
-                                                            break;
+                                            case "null":
+                                                break;
 
-                                                        case "null":
-                                                            break;
-
-                                                        default:
-                                                            break;
-                                                    }
-                                                }
-                                            });
+                                            default:
+                                                break;
                                         }
-                                    });
-                            mainSliderLayout.addSlider(textSliderView);
-
-                        }
-
-                        mainSliderLayout.setPresetTransformer(SliderLayout.Transformer.Accordion);
-                        mainSliderLayout.setPresetIndicator(SliderLayout.PresetIndicators.Center_Bottom);
-                        mainSliderLayout.setCustomAnimation(new DescriptionAnimation());
-                        mainSliderLayout.setDuration(3000);
-                        mainSliderLayout.startAutoCycle();
+                                    }
+                                });
+                        mainSliderLayout.addSlider(textSliderView);
                     }
-                });
-
-            } catch (Exception e) {
-                DB.sendToast("서버 접속 실패", 2);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            imageDataFlag = true;
+                    mainSliderLayout.setPresetTransformer(SliderLayout.Transformer.Accordion);
+                    mainSliderLayout.setPresetIndicator(SliderLayout.PresetIndicators.Center_Bottom);
+                    mainSliderLayout.setCustomAnimation(new DescriptionAnimation());
+                    mainSliderLayout.setDuration(3000);
+                    mainSliderLayout.startAutoCycle();
+                }
+            });
         }
     }
 
     // 메인 공지사항 리스트 로딩 핸들러
-    public class GetMainNoticeListData extends AsyncTask<Void, Void, Void> {
+    public class GetMainNoticeListData implements Runnable {
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getMainNoticeListData.php");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String param = "module_srl=" + DB.NOTICE_MODULE;
+                String result = new JsonHandler(URLP.MAIN_NOTCIE_LIST, param).execute().get();
 
-                InputStream is = con.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 for (int i = 0; i < jsonArray.length(); i++) {
@@ -292,42 +242,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                     });
                 }
-
-                br.close();
-
             } catch (Exception e) {
                 DB.sendToast("에러 발생" + e.getMessage(), 2);
             }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            noticeDataFlag = true;
         }
     }
 
     // 메인 최근 등록 원룸 리스트 로딩 핸들러
-    public class GetMainRoomListData extends AsyncTask<Void, Void, Void> {
+    public class GetMainRoomListData implements Runnable {
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        public void run() {
+
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getMainRoomListData.php");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String param = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
+                String result = new JsonHandler(URLP.MAIN_ROOM_LIST, param).execute().get();
 
-                InputStream is = con.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 for (int i = 0; i < jsonArray.length(); i++) {
@@ -352,19 +283,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                     });
                 }
-
-                br.close();
-
             } catch (Exception e) {
-                DB.sendToast("에러 발생" + e.getMessage(), 2);
+                DB.sendToast("에러: " + e.getMessage(), 2);
             }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            roomDataFlag = true;
         }
     }
 
@@ -372,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        switch(id) {
+        switch (id) {
             case R.id.nav_notice:
                 Intent intent = new Intent(MainActivity.this, NoticeListActivity.class);
                 startActivity(intent);
@@ -382,11 +303,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
         }
 
-
-
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+
         return true;
     }
 
@@ -409,7 +328,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         for (int i = 0; i < size; i++) {
             navigationView.getMenu().getItem(i).setChecked(false);
         }
-
     }
 
     @Override

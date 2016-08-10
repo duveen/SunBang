@@ -390,7 +390,7 @@ public class RoomActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomContentData.php?module=" + DB.room + "&id=" + roomSrl);
+                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomContentData.php?module=" + DB.ROOM_MODULE + "&id=" + roomSrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
                 InputStream is = con.getInputStream();
