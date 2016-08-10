@@ -137,7 +137,7 @@ public class SearchActivity extends AppCompatActivity {
                     });
                 }
             } catch (Exception e) {
-                DB.sendToast("에러: " + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 14: " + e.getMessage(), 2);
             }
         }
     }

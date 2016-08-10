@@ -18,6 +18,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -53,6 +54,10 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.JsonHandler;
+import kr.o3selab.sunbang.Instance.SunbangProgress;
+import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.Layout.RoomEvaluateContent;
 import kr.o3selab.sunbang.R;
 import me.grantland.widget.AutofitTextView;
@@ -121,10 +126,7 @@ public class RoomActivity extends AppCompatActivity {
         roomSrl = intent.getStringExtra("srl");
 
         // 로딩창 생성
-        pd = new ProgressDialog(this);
-        pd.setMessage("방 정보를 불러오고 있습니다.");
-        pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        pd.setCancelable(false);
+        pd = new SunbangProgress(this);
 
         // UI 컨텐츠 로딩..
         roomImageLayout = (SliderLayout) findViewById(R.id.main_room_image_slider);
@@ -166,12 +168,36 @@ public class RoomActivity extends AppCompatActivity {
 
 
         // 데이터 로딩..
-        new GetRoomImagesSliderData().execute();
-        new GetRoomContentData().execute();
-        new GetRoomOptionalData().execute();
-        new GetAverageRatingData().execute();
-        new GetPersonalRatingData().execute();
-        new GetEvaluateData().execute();
+
+        Thread getRoomimagesSliderData = new Thread(new GetRoomImagesSliderData());
+        getRoomimagesSliderData.start();
+
+        Thread getRoomContentData = new Thread(new GetRoomContentData());
+        getRoomContentData.start();
+
+        Thread getRoomOptionalData = new Thread(new GetRoomOptionalData());
+        getRoomOptionalData.start();
+
+        Thread getAverageRatingData = new Thread(new GetAverageRatingData());
+        getAverageRatingData.start();
+
+        Thread getPersonalRatingData = new Thread(new GetPersonalRatingData());
+        getPersonalRatingData.start();
+
+        Thread getEvaluateData = new Thread(new GetEvaluateData());
+        getEvaluateData.start();
+
+        Thread[] roomGroup = {
+                getRoomimagesSliderData,
+                getRoomContentData,
+                getRoomOptionalData,
+                getAverageRatingData,
+                getPersonalRatingData,
+                getEvaluateData
+        };
+
+        ThreadGroupHandler threadGroupHandler = new ThreadGroupHandler(roomGroup, pd);
+        threadGroupHandler.start();
 
 
         // 버튼 핸들러
@@ -190,7 +216,7 @@ public class RoomActivity extends AppCompatActivity {
                     return;
                 }
 
-                new SendEvaluateData(evaluateCommitButton).execute(content);
+                new Thread(new SendEvaluateData(evaluateCommitButton, content)).start();
             }
         });
 
@@ -212,7 +238,7 @@ public class RoomActivity extends AppCompatActivity {
                         .setPositiveButton("네", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                new SendRatingData(ratingBar.getRating(), ratingSendButton, ratingSendButton.getText()).execute();
+                                new Thread(new SendRatingData(ratingBar.getRating(), ratingSendButton, ratingSendButton.getText())).start();
                             }
                         })
                         .setNegativeButton("아니오", null)
@@ -303,29 +329,17 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   방 사진 로딩 핸들러
     // =======================================
-    public class GetRoomImagesSliderData extends AsyncTask<Void, Void, Void> {
+    public class GetRoomImagesSliderData implements Runnable {
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomImageData.php?srl=" + roomSrl);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-                InputStream is = con.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                br.close();
+                String param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                String result = new JsonHandler(URLP.ROOM_IMAGE_LIST, param).execute().get();
 
                 final Vector<String> images = new Vector<String>();
 
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 for (int i = 0; i < jsonArray.length(); i++) {
@@ -333,7 +347,7 @@ public class RoomActivity extends AppCompatActivity {
 
                     final String fileLocation = obj.getString("file");
 
-                    String fileUrl = "http://sunbang.o3selab.kr/" + fileLocation.substring(2, fileLocation.length());
+                    String fileUrl = URLP.BASE_URL + fileLocation.substring(2, fileLocation.length());
                     images.add(fileUrl);
                 }
 
@@ -367,17 +381,9 @@ public class RoomActivity extends AppCompatActivity {
                         roomImageLayout.setCustomAnimation(new DescriptionAnimation());
                     }
                 });
-
             } catch (Exception e) {
-                DB.sendToast("에러", 2);
+                DB.sendToast("ErrorCode 15: " + e.getMessage(), 2);
             }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-
         }
     }
 
@@ -385,27 +391,14 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   방 정보 로딩 핸들러 - 1
     // =======================================
-    public class GetRoomContentData extends AsyncTask<Void, Void, Void> {
-
+    public class GetRoomContentData implements Runnable {
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomContentData.php?module=" + DB.ROOM_MODULE + "&id=" + roomSrl);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                String result = new JsonHandler(URLP.ROOM_CONTENT_DATA, param).execute().get();
 
-                InputStream is = con.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                br.close();
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 JSONObject obj = jsonArray.getJSONObject(0);
@@ -419,46 +412,28 @@ public class RoomActivity extends AppCompatActivity {
                         roomDetailContent.setText(Html.fromHtml(content));
                     }
                 });
-
             } catch (Exception e) {
-                DB.sendToast("에러 발생", 2);
+                DB.sendToast("ErrorCode 16: " + e.getMessage(), 2);
             }
-
-
-            return null;
         }
-
     }
 
 
     // =======================================
     //   방 정보 로딩 핸들러 - 2
     // =======================================
-    public class GetRoomOptionalData extends AsyncTask<Void, Void, Void> {
-
+    public class GetRoomOptionalData implements Runnable {
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
 
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getRoomOptionalData.php?srl=" + roomSrl);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-                InputStream is = con.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                br.close();
+                String param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                String result = new JsonHandler(URLP.ROOM_OPTIONAL_DATA, param).execute().get();
 
                 String value;
                 JSONObject obj;
 
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 // 부제목
@@ -577,13 +552,13 @@ public class RoomActivity extends AppCompatActivity {
                                         .setPositiveButton("전화", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                sendContactLog(1, phone);
+                                                new Thread(new SendContactLog(1, phone)).start();
                                             }
                                         })
                                         .setNegativeButton("문자", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                sendContactLog(2, phone);
+                                                new Thread(new SendContactLog(2, phone)).start();
                                             }
                                         })
                                         .show();
@@ -610,12 +585,9 @@ public class RoomActivity extends AppCompatActivity {
                         }
                     }
                 });
-
             } catch (Exception e) {
-                DB.sendToast("에러 발생", 2);
+                DB.sendToast("ErrorCode 17: " + e.getMessage(), 2);
             }
-
-            return null;
         }
     }
 
@@ -654,46 +626,50 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   문의하기 기록 남기기
     // =======================================
-    public void sendContactLog(Integer type, String phone) {
-        try {
+    public class SendContactLog implements Runnable {
+
+        public Integer type;
+        public String phone;
+
+        public SendContactLog(Integer type, String phone) {
+            this.type = type;
+            this.phone = phone;
+        }
+
+        @Override
+        public void run() {
+            // 문의 버튼 클릭 핸들러
             Thread th = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        URL url = new URL("http://sunbang.o3selab.kr/script/sendContactLog.php?srl=" + roomSrl + "&pn=" + DB.phone_number);
-                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-                        BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-                        String line;
-                        if (!(line = br.readLine()).equals("TRUE")) {
-                            DB.sendToast("예외발생! 관리자에게 문의해주세요!", 2);
-                        }
-                        br.close();
+                        String param = URLP.PARAM_DOCUMENT_SRL + roomSrl + "&phone=" + DB.phone_number;
+                        String result = new JsonHandler(URLP.ROOM_SEND_CONTACT_LOG, param).execute().get();
                     } catch (Exception e) {
-                        DB.sendToast("예외발생! 관리자에게 문의해주세요!", 2);
+                        DB.sendToast("ErrorCode 18: " + e.getMessage(), 2);
                     }
                 }
             });
 
             th.start();
-
-
-            switch (type) {
-                case 1:
-                    Uri uri = Uri.parse("tel:" + phone);
-                    Intent i = new Intent(Intent.ACTION_DIAL, uri);
-                    startActivity(i);
-                    break;
-                case 2:
-                    Uri uri2 = Uri.parse("smsto:" + phone);
-                    Intent i2 = new Intent(Intent.ACTION_SENDTO, uri2);
-                    i2.putExtra("sms_body", "선방앱에서 보고 연락드립니다!");
-                    startActivity(i2);
-                    break;
-            }
-
-        } catch (Exception e) {
-            DB.sendToast(e.getMessage(), 2);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    switch (type) {
+                        case 1:
+                            Uri uri = Uri.parse("tel:" + phone);
+                            Intent i = new Intent(Intent.ACTION_DIAL, uri);
+                            startActivity(i);
+                            break;
+                        case 2:
+                            Uri uri2 = Uri.parse("smsto:" + phone);
+                            Intent i2 = new Intent(Intent.ACTION_SENDTO, uri2);
+                            i2.putExtra("sms_body", "선방앱에서 보고 연락드립니다!");
+                            startActivity(i2);
+                            break;
+                    }
+                }
+            });
         }
     }
 
@@ -701,7 +677,7 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   별점평가 전송 핸들러
     // =======================================
-    public class SendRatingData extends AsyncTask<Void, Void, Void> {
+    public class SendRatingData implements Runnable {
         public Float rating;
         public TextView sendButton;
         public CharSequence text;
@@ -713,53 +689,50 @@ public class RoomActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPreExecute() {
-            sendButton.setEnabled(false);
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
 
             try {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendButton.setEnabled(false);
+                    }
+                });
 
-                URL url = null;
+                String param;
+                String url = "";
 
-                switch((String) text) {
+                param = URLP.PARAM_DOCUMENT_SRL + roomSrl + "&phone=" + DB.phone_number + "&rate=" + rating;
+                switch ((String) text) {
                     case "제출":
-                        url = new URL("http://sunbang.o3selab.kr/script/sendFirstRatingData.php?" +
-                                "srl=" + roomSrl +
-                                "&pn=" + DB.phone_number +
-                                "&rate=" + rating);
+                        url = URLP.ROOM_SEND_FISRT_RATING_DATA;
                         break;
                     case "수정":
-                        url = new URL("http://sunbang.o3selab.kr/script/sendModRatingData.php?" +
-                                "rate=" + rating +
-                                "&pn=" + DB.phone_number);
+                        url = URLP.ROOM_SEND_MOD_RATING_DATA;
                         break;
                 }
 
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String result = new JsonHandler(url, param).execute().get();
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-                if (br.readLine().contains("TRUE")) {
+                if (result.contains("TRUE")) {
                     DB.sendToast("제출완료", 1);
                 } else {
                     DB.sendToast("제출실패", 2);
                 }
 
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendButton.setEnabled(true);
+                    }
+                });
+
+                new Thread(new GetAverageRatingData()).start();
+                new Thread(new GetPersonalRatingData()).start();
+
             } catch (Exception e) {
-                DB.sendToast("제출실패:" + e.getMessage(), 2);
-                //e.printStackTrace();
+                DB.sendToast("ErrorCode 19: " + e.getMessage(), 2);
             }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            sendButton.setEnabled(true);
-            new GetAverageRatingData().execute();
-            new GetPersonalRatingData().execute();
         }
     }
 
@@ -767,32 +740,24 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   평균 별점정보 불러오기 핸들러
     // =======================================
-    public class GetAverageRatingData extends AsyncTask<Void, Void, Void> {
+    public class GetAverageRatingData implements Runnable {
         @Override
-        protected Void doInBackground(Void... params) {
-
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getAverageRatingData.php?srl=" + roomSrl);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                String result = new JsonHandler(URLP.ROOM_AVERAGE_RATING_DATA, param).execute().get();
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 JSONObject obj = jsonArray.getJSONObject(0);
 
-                final Double rate = Math.ceil(obj.getDouble("rate")/0.5)*0.5;
+                final Double rate = Math.ceil(obj.getDouble("rate") / 0.5) * 0.5;
                 runOnUiThread(new Runnable() {
                     @Override
-                    public void run() { ratingAverage.setText("평균 : " + rate); }
+                    public void run() {
+                        ratingAverage.setText("평균 : " + rate);
+                    }
                 });
 
             } catch (Exception e) {
@@ -803,7 +768,6 @@ public class RoomActivity extends AppCompatActivity {
                     }
                 });
             }
-            return null;
         }
     }
 
@@ -811,23 +775,14 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   개인 별점정보 불러오기 핸들러
     // =======================================
-    public class GetPersonalRatingData extends AsyncTask<Void, Void, Void> {
+    public class GetPersonalRatingData implements Runnable {
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getPersonalRatingData.php?srl=" + roomSrl + "&pn=" + DB.phone_number);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                String param = URLP.PARAM_DOCUMENT_SRL + roomSrl + "&phone=" + DB.phone_number;
+                String result = new JsonHandler(URLP.ROOM_PERSONAL_RATING_DATA, param).execute().get();
+                Log.d("e", result);
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 JSONObject obj = jsonArray.getJSONObject(0);
@@ -841,10 +796,8 @@ public class RoomActivity extends AppCompatActivity {
                     }
                 });
             } catch (Exception e) {
-
+                DB.sendToast("ErrorCode 20: " + e.getMessage(), 2);
             }
-
-            return null;
         }
     }
 
@@ -852,64 +805,58 @@ public class RoomActivity extends AppCompatActivity {
     // =======================================
     //   평가하기 전송 핸들러
     // =======================================
-    public class SendEvaluateData extends AsyncTask<String, Void, Void> {
+    public class SendEvaluateData implements Runnable {
 
         public Button button;
+        public String params;
 
-        public SendEvaluateData(Button b) {
+        public SendEvaluateData(Button b, String params) {
             this.button = b;
+            this.params = params;
         }
 
         @Override
-        protected void onPreExecute() {
-            button.setEnabled(false);
-        }
-
-        @Override
-        protected Void doInBackground(String... params) {
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    button.setEnabled(false);
+                }
+            });
 
             try {
-                String data = URLEncoder.encode(params[0], "UTF-8");
+                String data = URLEncoder.encode(params, "UTF-8");
+                String param = URLP.PARAM_DOCUMENT_SRL + roomSrl + "&phone=" + DB.phone_number + "&data=" + data;
+                String result = new JsonHandler(URLP.ROOM_SEND_COMMENT_DATA, param).execute().get();
 
-                URL url = new URL("http://sunbang.o3selab.kr/script/sendCommentData.php?" +
-                        "srl=" + roomSrl + "&" +
-                        "phone=" + DB.phone_number + "&" +
-                        "data=" + data);
-
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-                String line = br.readLine();
-
-                if (line.equals("TRUE")) {
+                if (result.contains("TRUE")) {
                     // 전송 성공 목록 초기화
                 } else {
                     throw new Exception("전송실패");
                 }
 
+                new Thread(new GetEvaluateData()).start();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        evaluateTextField.setText("");
+                        button.setEnabled(true);
+                    }
+                });
             } catch (Exception e) {
-                DB.sendToast(e.getMessage(), 2);
+                DB.sendToast("ErrorCode 21: " + e.getMessage(), 2);
             }
-
-            return null;
         }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            new GetEvaluateData().execute();
-            evaluateTextField.setText("");
-            button.setEnabled(true);
-        }
-
     }
 
 
     // =======================================
     //   한줄평가 리스트 로딩 핸들러
     // =======================================
-    public class GetEvaluateData extends AsyncTask<Void, Void, Void> {
+    public class GetEvaluateData implements Runnable {
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -919,23 +866,14 @@ public class RoomActivity extends AppCompatActivity {
             });
 
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getEvaluateData.php?srl=" + roomSrl);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                String result = new JsonHandler(URLP.ROOM_EVALUATE_DATA, param).execute().get();
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("utf-8")));
+                JSONObject jsonObject = new JSONObject(result);
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
 
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
-                JSONArray result = jsonObject.getJSONArray("result");
-
-                for (int i = 0; i < result.length(); i++) {
-                    JSONObject obj = result.getJSONObject(i);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
 
                     final Integer cId = obj.getInt("id");
                     final String cName = obj.getString("phone");
@@ -950,9 +888,8 @@ public class RoomActivity extends AppCompatActivity {
                     });
                 }
             } catch (Exception e) {
-                DB.sendToast(e.getMessage(), 2);
+                DB.sendToast("ErrorCode 22: " + e.getMessage(), 2);
             }
-            return null;
         }
     }
 
@@ -961,6 +898,6 @@ public class RoomActivity extends AppCompatActivity {
     //   한줄평가 리스트 로딩 메소드
     // =======================================
     public void getEvaluateDataMethod() {
-        new GetEvaluateData().execute();
+        new Thread(new GetEvaluateData()).start();
     }
 }

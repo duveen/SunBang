@@ -243,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
                 }
             } catch (Exception e) {
-                DB.sendToast("에러 발생" + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 6:" + e.getMessage(), 2);
             }
         }
     }
@@ -284,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
                 }
             } catch (Exception e) {
-                DB.sendToast("에러: " + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 7: " + e.getMessage(), 2);
             }
         }
     }

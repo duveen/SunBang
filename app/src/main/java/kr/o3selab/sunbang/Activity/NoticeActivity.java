@@ -85,6 +85,10 @@ public class NoticeActivity extends AppCompatActivity {
         });
     }
 
+
+    // =======================================
+    //   공지 데이터 수신
+    // =======================================
     public class GetNoticeData implements Runnable {
 
         public String document_srl;
@@ -128,7 +132,7 @@ public class NoticeActivity extends AppCompatActivity {
                 });
 
             } catch (Exception e) {
-                DB.sendToast("에러: " + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 11: " + e.getMessage(), 2);
             }
         }
     }

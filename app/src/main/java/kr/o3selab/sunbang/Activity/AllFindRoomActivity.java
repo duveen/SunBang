@@ -28,6 +28,10 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.JsonHandler;
+import kr.o3selab.sunbang.Instance.SunbangProgress;
+import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.R;
 
 public class AllFindRoomActivity extends AppCompatActivity implements MapView.POIItemEventListener {
@@ -61,12 +65,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             }
         });
 
-        pd = new ProgressDialog(this);
-        pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        pd.setCancelable(false);
-        pd.setTitle("알림");
-        pd.setMessage("데이터를 불러오고 있습니다.");
-
+        pd = new SunbangProgress(this);
     }
 
     @Override
@@ -147,7 +146,14 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_map_view);
             mapViewContainer.addView(mapView);
 
-            new GetLocationPoint().execute();
+            Thread getLocationPoint = new Thread(new GetLocationPoint());
+            getLocationPoint.start();
+
+            Thread[] findRoomGroup = {getLocationPoint};
+
+            ThreadGroupHandler threadGroupHandler = new ThreadGroupHandler(findRoomGroup, pd);
+            threadGroupHandler.start();
+
         } catch (Exception e) {
             // DB.sendToast(e.getMessage(), 2);
         }
@@ -157,31 +163,14 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     // =======================================
     //   지도 마커 불러오기
     // =======================================
-    public class GetLocationPoint extends AsyncTask<Void, Void, Void> {
+    public class GetLocationPoint implements Runnable {
         @Override
-        protected void onPreExecute() {
-            pd.show();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/getAllMapLocation.php?module_srl=" + DB.ROOM_MODULE);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String param = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
+                String result = new JsonHandler(URLP.MAP_ALL_LOCATION, param).execute().get();
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-
-                StringBuilder sb = new StringBuilder();
-                String line;
-
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                br.close();
-
-                JSONObject jsonObject = new JSONObject(sb.toString());
+                JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                 for (int i = 0; i < jsonArray.length(); i = i + 2) {
@@ -213,20 +202,10 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                             mapView.addPOIItem(marker);
                         }
                     });
-
                 }
-
-
             } catch (Exception e) {
-                DB.sendToast(e.getMessage(), 2);
+                DB.sendToast("ErrorCode 12: " + e.getMessage(), 2);
             }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            pd.dismiss();
         }
     }
 
@@ -237,29 +216,16 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public String getTitle(String srl) {
         String title = "";
         try {
-            URL url = new URL("http://sunbang.o3selab.kr/script/getDocumentTitle.php?id=" + srl);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            String param = URLP.PARAM_DOCUMENT_SRL + srl;
+            String result = new JsonHandler(URLP.MAP_ALL_LOCATION_GET_TITLE, param).execute().get();
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("utf-8")));
-
-            StringBuilder sb = new StringBuilder();
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-            br.close();
-
-            JSONObject jsonObject = new JSONObject(sb.toString());
+            JSONObject jsonObject = new JSONObject(result);
             JSONArray jsonArray = jsonObject.getJSONArray("result");
             JSONObject obj = jsonArray.getJSONObject(0);
             title = obj.getString("link");
-
         } catch (Exception e) {
-            DB.sendToast(e.getMessage(), 2);
+            DB.sendToast("ErrorCode 13: " + e.getMessage(), 2);
         }
-
         return title;
     }
 
@@ -274,7 +240,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         Integer tag = item.getTag();
 
         Intent intent = new Intent(AllFindRoomActivity.this, RoomActivity.class);
-        intent.putExtra("srl", tag+"");
+        intent.putExtra("srl", tag + "");
         startActivity(intent);
     }
 
@@ -283,11 +249,16 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     //   미사용 콜백 메소드
     // =======================================
     @Override
-    public void onPOIItemSelected(MapView mapView, MapPOIItem mapPOIItem) {  }
+    public void onPOIItemSelected(MapView mapView, MapPOIItem mapPOIItem) {
+    }
+
     @Override
-    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem) {  }
+    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem) {
+    }
+
     @Override
-    public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {  }
+    public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {
+    }
 
 
     // =======================================
@@ -304,7 +275,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             return null;
         }
     }
-
 
 
 }

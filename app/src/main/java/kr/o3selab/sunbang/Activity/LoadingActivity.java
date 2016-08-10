@@ -49,7 +49,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         try {
             getPermission();
         } catch (Exception e) {
-            DB.sendToast(e.getMessage(), 2);
+            DB.sendToast("ErrorCode 1: " + e.getMessage(), 2);
         }
 
     }
@@ -68,7 +68,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 this.finish();
                 break;
             default:
-                DB.sendToast("에러", 2);
+                DB.sendToast("ErrorCode 2:", 2);
                 break;
         }
     }
@@ -250,7 +250,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             Thread th = new Thread(new GetMainImageData());
             th.start();
         } catch (Exception e) {
-            DB.sendToast("에러: " + e.getMessage(), 2);
+            DB.sendToast("Error Code 3: " + e.getMessage(), 2);
             DB.sendToast("프로그램을 종료합니다.", 2);
 
             LoadingActivity.this.finish();
@@ -280,7 +280,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     Log.e("error", result);
                 }
             } catch (Exception e) {
-                DB.sendToast("여기니" + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 4: " + e.getMessage(), 2);
             }
         }
     }
@@ -318,10 +318,8 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                         LoadingActivity.this.finish();
                     }
                 });
-            } catch (JSONException e) {
-                DB.sendToast("데이터 오류: " + e.getMessage(), 2);
             } catch (Exception e) {
-                DB.sendToast("알수없는 오류: " + e.getMessage(), 2);
+                DB.sendToast("Error Code 5: " + e.getMessage(), 2);
             }
         }
     }

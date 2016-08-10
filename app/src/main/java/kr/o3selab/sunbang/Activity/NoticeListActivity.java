@@ -99,7 +99,7 @@ public class NoticeListActivity extends AppCompatActivity {
                 String result = new JsonHandler(URLP.NOTICE_LIST_DOCUMENT_COUNT, param).execute().get();
                 document_count = Integer.parseInt(result.substring(0, result.length() - 2));
             } catch (Exception e) {
-                DB.sendToast("에러: " + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 8: " + e.getMessage(), 2);
             }
         }
     }
@@ -163,7 +163,7 @@ public class NoticeListActivity extends AppCompatActivity {
                                 tableLayout.addView(fl);
                             }
                         } catch (Exception e) {
-                            DB.sendToast("에러: " + e.getMessage(), 2);
+                            DB.sendToast("ErrorCode 9: " + e.getMessage(), 2);
                         }
                     }
                 });
@@ -172,7 +172,7 @@ public class NoticeListActivity extends AppCompatActivity {
                 getNoticePageData.start();
 
             } catch (Exception e) {
-                DB.sendToast("에러: " + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 10: " + e.getMessage(), 2);
             }
         }
 

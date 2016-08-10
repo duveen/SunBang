@@ -16,6 +16,8 @@ import java.nio.charset.Charset;
 
 import kr.o3selab.sunbang.Activity.RoomActivity;
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.JsonHandler;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.R;
 
 /**
@@ -50,7 +52,6 @@ public class RoomEvaluateContent extends LinearLayout {
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
                     new AlertDialog.Builder(instance)
                             .setTitle("알림")
                             .setMessage("정말로 댓글을 삭제하시겠습니까?")
@@ -58,11 +59,10 @@ public class RoomEvaluateContent extends LinearLayout {
                             .setPositiveButton("네", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    new sendDeleteData().execute();
+                                    new Thread(new SendDeleteData()).start();
                                 }
                             })
                             .show();
-
                 }
             });
 
@@ -74,29 +74,22 @@ public class RoomEvaluateContent extends LinearLayout {
     // ======================================
     //   댓글 삭제하기
     // =======================================
-    public class sendDeleteData extends AsyncTask<Void, Void, Void> {
+    public class SendDeleteData implements Runnable {
 
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
             try {
-                URL url = new URL("http://sunbang.o3selab.kr/script/sendDeleteComment.php?id=" + id);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                String param = "id=" + id;
+                String result = new JsonHandler(URLP.ROOM_SEND_DELETE_COMMENT, param).execute().get();
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName("euc-kr")));
-                String line;
-                if (!(line = br.readLine()).equals("TRUE")) {
-                    DB.sendToast("예외발생! 관리자에게 문의해주세요!", 2);
+                if(result.contains("TRUE")) {
+
+                } else {
+                    DB.sendToast("ErrorCode 23: " + result, 2);
                 }
-                br.close();
             } catch (Exception e) {
-                DB.sendToast("예외발생! 관리자에게 문의해주세요!", 2);
+                DB.sendToast("ErrorCode 23-1:", 2);
             }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
             instance.getEvaluateDataMethod();
         }
     }
