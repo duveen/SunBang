@@ -29,6 +29,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.StringTokenizer;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Instance.JsonHandler;
@@ -227,7 +229,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
             String mPhoneNumber = tMgr.getLine1Number();
 
-            if(mPhoneNumber.contains("+82")) {
+            if (mPhoneNumber.contains("+82")) {
                 mPhoneNumber = mPhoneNumber.replace("+82", "0");
             }
 
@@ -276,7 +278,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             try {
                 String param = "mId=" + mID + "&phone=" + mPhoneNumber;
                 String result = new JsonHandler(URLP.SEND_USER_DATA, param).execute().get();
-                if(!result.equals("TRUE")) {
+                if (!result.equals("TRUE")) {
                     Log.e("error", result);
                 }
             } catch (Exception e) {
@@ -310,6 +312,71 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 }
 
                 DB.mainImages = mainImages;
+
+                Thread th = new Thread(new GetMainRoomContentData());
+                th.start();
+
+            } catch (Exception e) {
+                DB.sendToast("Error Code 5: " + e.getMessage(), 2);
+            }
+        }
+    }
+
+    // 메인 우선순위별 원룸 리스트 로딩 핸들러
+    public class GetMainRoomContentData implements Runnable {
+        @Override
+        public void run() {
+            try {
+                LinkedList<RoomContent> roomList = new LinkedList<>();
+
+                String param = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
+                String result = new JsonHandler(URLP.MAIN_ROOM_CONTENT_LIST, param).execute().get();
+                Log.d("No.1", result);
+                JSONObject jsonObject = new JSONObject(result);
+                JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    Integer roomSrl = obj.getInt("document_srl");
+
+                    param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                    result = new JsonHandler(URLP.MAIN_ROOM_CONTENT, param).execute().get();
+                    Log.d("No.2", result);
+                    JSONObject dJsonObject = new JSONObject(result);
+                    JSONArray dJsonArray = dJsonObject.getJSONArray("result");
+
+                    JSONObject value = dJsonArray.getJSONObject(0);
+                    result = value.getString("result");
+
+                    StringTokenizer str = new StringTokenizer(result, "|@|");
+                    final String nickName = str.nextToken();
+                    final String title = str.nextToken();
+                    final String image = URLP.BASE_URL + str.nextToken().substring(2);
+                    final String money = str.nextToken() + " / " + str.nextToken() + " " + str.nextToken() + " 만원";
+
+                    param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                    result = new JsonHandler(URLP.ROOM_AVERAGE_RATING_DATA, param).execute().get();
+                    Log.d("No.3", result);
+                    dJsonObject = new JSONObject(result);
+                    dJsonArray = dJsonObject.getJSONArray("result");
+
+                    value = dJsonArray.getJSONObject(0);
+                    String rate;
+
+                    try {
+                        if(value.getString("rate").equals("null"))
+                            rate = "★ 평가없음";
+                        else rate = "★ " + value.getString("rate");
+                    } catch (Exception e) {
+                        rate = "★ 평가없음";
+                    }
+
+                    roomList.add(new RoomContent(roomSrl+"", nickName, title, image, money, rate));
+                }
+
+                DB.roomList = roomList;
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -319,8 +386,33 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     }
                 });
             } catch (Exception e) {
-                DB.sendToast("Error Code 5: " + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 21:" + e.getMessage(), 2);
             }
+        }
+
+
+    }
+
+    public class RoomContent {
+        public String nick_name;
+        public String title;
+        public String image;
+        public String money;
+        public String rate;
+        public String roomSrl;
+
+        public RoomContent(String roomSrl, String nick_name, String title, String image, String money, String rate) {
+            this.nick_name = nick_name;
+            this.title = title;
+            this.image = image;
+            this.money = money;
+            this.rate = rate;
+            this.roomSrl = roomSrl;
+        }
+
+        @Override
+        public String toString() {
+            return nick_name + ", " + title + ", " + image + ", " + money + ", " + rate;
         }
     }
 }

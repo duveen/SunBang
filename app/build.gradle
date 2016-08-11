@@ -7,8 +7,8 @@ android {
         applicationId "kr.o3selab.sunbang"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 7
-        versionName '1.0006'
+        versionCode 8
+        versionName '1.0007'
     }
     buildTypes {
         release {
@@ -45,5 +45,4 @@ dependencies {
     compile 'com.github.ParkSangGwon:TedPermission:v1.0.12'
     // Glide Library
     compile 'com.github.bumptech.glide:glide:3.7.0'
-
 }

@@ -7,8 +7,10 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -25,9 +27,11 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.StringTokenizer;
 
 import kr.o3selab.sunbang.Activity.AllFindRoomActivity;
+import kr.o3selab.sunbang.Activity.LoadingActivity;
 import kr.o3selab.sunbang.Activity.NoticeActivity;
 import kr.o3selab.sunbang.Activity.NoticeListActivity;
 import kr.o3selab.sunbang.Activity.RoomActivity;
@@ -38,6 +42,7 @@ import kr.o3selab.sunbang.Instance.SunbangProgress;
 import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
 import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.Layout.MainNoticeLinearLayout;
+import kr.o3selab.sunbang.Layout.MainRoomContentLayout;
 import kr.o3selab.sunbang.Layout.MainRoomLinearLayout;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -45,10 +50,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public SliderLayout mainSliderLayout;
     public FrameLayout locationFrame;
     public FrameLayout moneyFrame;
+    public LinearLayout mainRoomContentLayout;
     public LinearLayout mainNoticeLayout;
     public LinearLayout mainRoomLayout;
     public TextView mainNoticeTextView;
     public ImageView mainSearchImageView;
+    public ImageView footerLogoImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,8 +73,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         moneyFrame = (FrameLayout) findViewById(R.id.main_money_frame);
         mainNoticeLayout = (LinearLayout) findViewById(R.id.main_notice_layout);
         mainNoticeTextView = (TextView) findViewById(R.id.main_notice_view);
+        mainRoomContentLayout = (LinearLayout) findViewById(R.id.activity_main_room_content_list);
         mainRoomLayout = (LinearLayout) findViewById(R.id.main_room_layout);
         mainSearchImageView = (ImageView) findViewById(R.id.activity_main_ic_search);
+        footerLogoImageView = (ImageView) findViewById(R.id.main_footer_logo_image);
 
 
         // 네비게이션 바 핸들러
@@ -103,10 +112,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Thread getRoomListDataThread = new Thread(new GetMainRoomListData());
         getRoomListDataThread.start();
 
-        Thread[] mainGroup = {getImageListShowThread, getNoticeListDataThread, getRoomListDataThread};
+        Thread getMainRoomContentData = new Thread(new GetMainRoomContentData());
+        getMainRoomContentData.start();
+
+        Thread[] mainGroup = {getImageListShowThread, getNoticeListDataThread, getRoomListDataThread, getMainRoomContentData};
 
         ThreadGroupHandler threadGroupHandler = new ThreadGroupHandler(mainGroup, pd);
         threadGroupHandler.start();
+
+        ;
 
         // 핸들러
         locationFrame.setOnClickListener(new View.OnClickListener() {
@@ -139,6 +153,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
             }
         });
+
+
+        if (mainSearchImageView.isShown()) {
+            DB.sendToast("활성화!", 2);
+        } else {
+            DB.sendToast("노노!", 2);
+        }
     }
 
     // 메인 이미지 슬라이더 로딩 핸들러
@@ -289,6 +310,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+
+
+    public class GetMainRoomContentData implements Runnable {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    LinkedList<LoadingActivity.RoomContent> list = DB.roomList;
+
+                    final float scale = getResources().getDisplayMetrics().density;
+                    int m0dp = (int) (0 * scale + 0.5f);
+
+                    LinearLayout parentLayout = null;
+
+                    for(int i = 0; i < list.size(); i=i+2) {
+                        parentLayout = new LinearLayout(MainActivity.this);
+                        parentLayout.setOrientation(LinearLayout.HORIZONTAL);
+                        parentLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+                        LoadingActivity.RoomContent content = list.get(i);
+                        LinearLayout layout = new MainRoomContentLayout(MainActivity.this, content.roomSrl, content.nick_name, content.title, content.image, content.money, content.rate);
+                        layout.setLayoutParams(new LinearLayout.LayoutParams(m0dp, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
+                        layout.setWeightSum(1);
+                        parentLayout.addView(layout);
+
+                        try {
+                            content = list.get(i + 1);
+                            LinearLayout layout2 = new MainRoomContentLayout(MainActivity. this,content.roomSrl, content.nick_name, content.title, content.image, content.money, content.rate);
+                            layout2.setLayoutParams(new LinearLayout.LayoutParams(m0dp, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
+                            layout2.setWeightSum(1);
+                            parentLayout.addView(layout2);
+
+                        } catch (IndexOutOfBoundsException e) {
+                            LinearLayout layout2 = new LinearLayout(MainActivity.this);
+                            layout2.setLayoutParams(new LinearLayout.LayoutParams(m0dp, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+                            layout2.setWeightSum(1);
+                            parentLayout.addView(layout2);
+                        }
+                        mainRoomContentLayout.addView(parentLayout);
+                    }
+                }
+            });
+        }
+    }
+
+
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -339,4 +407,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             super.onBackPressed();
         }
     }
+
+
 }

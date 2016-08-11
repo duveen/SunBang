@@ -6,11 +6,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -41,15 +37,8 @@ import net.daum.mf.map.api.MapView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -75,7 +64,8 @@ public class RoomActivity extends AppCompatActivity {
 
     public TextView roomTopTitle;
     public TextView roomTopDeposit;
-    public TextView roomTopMonthly;
+    public TextView roomTopMonthOrSeme;
+    public TextView roomTopMoney;
     public TextView roomTopSubTitle;
 
     public TextView roomTopRoomType;
@@ -85,7 +75,8 @@ public class RoomActivity extends AppCompatActivity {
     public TextView roomInfoRoomType;
     public TextView roomInfoRoomSize;
     public TextView roomInfoDeposit;
-    public TextView roomInfoMonthlyMoney;
+    public TextView roomInfoMonthOrSeme;
+    public TextView roominfoMoney;
     public TextView roomInfoIncludeAdmin;
     public TextView roomInfoFireType;
     public TextView roomInfoElevator;
@@ -135,7 +126,8 @@ public class RoomActivity extends AppCompatActivity {
         roomTopUndoButton = (ImageView) findViewById(R.id.room_activity_ic_undo);
         roomTopTitle = (TextView) findViewById(R.id.activity_room_top_title);
         roomTopDeposit = (TextView) findViewById(R.id.activity_room_top_deposit);
-        roomTopMonthly = (TextView) findViewById(R.id.activity_room_top_monthly);
+        roomTopMonthOrSeme = (TextView) findViewById(R.id.activity_room_top_monthorseme);
+        roomTopMoney = (TextView) findViewById(R.id.activity_room_top_money);
         roomTopSubTitle = (TextView) findViewById(R.id.activity_room_top_subtitle);
 
         roomTopRoomType = (TextView) findViewById(R.id.activity_room_top_room_type);
@@ -145,7 +137,8 @@ public class RoomActivity extends AppCompatActivity {
         roomInfoRoomType = (TextView) findViewById(R.id.activity_room_info_type);
         roomInfoRoomSize = (TextView) findViewById(R.id.activity_room_info_size);
         roomInfoDeposit = (TextView) findViewById(R.id.activity_room_info_deposit);
-        roomInfoMonthlyMoney = (TextView) findViewById(R.id.activity_room_info_monthly);
+        roomInfoMonthOrSeme = (TextView) findViewById(R.id.activity_room_info_monthorseme);
+        roominfoMoney = (TextView) findViewById(R.id.activity_room_info_money);
         roomInfoIncludeAdmin = (TextView) findViewById(R.id.activity_room_info_include_admin);
         roomInfoFireType = (TextView) findViewById(R.id.activity_room_info_fire_type);
         roomInfoElevator = (TextView) findViewById(R.id.activity_room_info_elevator);
@@ -464,60 +457,65 @@ public class RoomActivity extends AppCompatActivity {
                 // 월세 or 학기
                 obj = jsonArray.getJSONObject(5);
                 value = obj.getString("value");
-                final String monthly = value;
+                final String monthorseme = value;
+
+                // 금액
+                obj = jsonArray.getJSONObject(6);
+                value = obj.getString("value");
+                final String money = value;
 
                 // 관리비 포함 항목
-                obj = jsonArray.getJSONObject(6);
+                obj = jsonArray.getJSONObject(7);
                 value = obj.getString("value");
                 final String includeAdmin = getTokenString(value);
 
                 // 평균 관리비
-                obj = jsonArray.getJSONObject(7);
+                obj = jsonArray.getJSONObject(8);
                 value = obj.getString("value");
                 final String monthlyMoney = value;
 
                 // 난방
-                obj = jsonArray.getJSONObject(8);
+                obj = jsonArray.getJSONObject(9);
                 value = obj.getString("value");
                 final String fireType = value;
 
                 // 엘리베이터
-                obj = jsonArray.getJSONObject(9);
+                obj = jsonArray.getJSONObject(10);
                 value = obj.getString("value");
                 final String elevator = value;
 
                 // 주차 여부
-                obj = jsonArray.getJSONObject(10);
+                obj = jsonArray.getJSONObject(11);
                 value = obj.getString("value");
                 final String parking = value;
 
                 // 입주 가능 월
-                obj = jsonArray.getJSONObject(11);
+                obj = jsonArray.getJSONObject(12);
                 value = obj.getString("value");
                 final String into = value;
 
                 // 최대 인원
-                obj = jsonArray.getJSONObject(12);
+                obj = jsonArray.getJSONObject(13);
                 value = obj.getString("value");
                 final String maxPeople = value;
 
                 // 옵션 품목
-                obj = jsonArray.getJSONObject(13);
+                obj = jsonArray.getJSONObject(14);
                 value = obj.getString("value");
                 final String optional = getTokenString(value);
 
                 // 연락처
-                obj = jsonArray.getJSONObject(14);
+                obj = jsonArray.getJSONObject(15);
                 value = obj.getString("value");
                 final String phone = getPhoneTokenString(value);
 
                 // 경도
-                obj = jsonArray.getJSONObject(15);
+                obj = jsonArray.getJSONObject(16);
                 value = obj.getString("value");
                 final Double lat = Double.parseDouble(value);
 
                 // 위도
-                obj = jsonArray.getJSONObject(16);
+                obj = jsonArray.getJSONObject(17);
                 value = obj.getString("value");
                 final Double lng = Double.parseDouble(value);
 
@@ -526,7 +524,8 @@ public class RoomActivity extends AppCompatActivity {
                     public void run() {
                         roomTopSubTitle.setText(subTitle);
                         roomTopDeposit.setText(deposit);
-                        roomTopMonthly.setText(monthly);
+                        roomTopMonthOrSeme.setText(monthorseme);
+                        roomTopMoney.setText(money);
 
                         roomTopRoomType.setText(roomType);
                         roomTopRoomFloor.setText(floor);
@@ -535,7 +534,8 @@ public class RoomActivity extends AppCompatActivity {
                         roomInfoRoomType.setText(roomType);
                         roomInfoRoomSize.setText(roomSize);
                         roomInfoDeposit.setText(deposit);
-                        roomInfoMonthlyMoney.setText(monthly);
+                        roomInfoMonthOrSeme.setText(monthorseme);
+                        roominfoMoney.setText(money);
                         roomInfoIncludeAdmin.setText(includeAdmin);
                         roomInfoFireType.setText(fireType);
                         roomInfoElevator.setText(elevator);
@@ -784,8 +784,13 @@ public class RoomActivity extends AppCompatActivity {
                 Log.d("e", result);
                 JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
+                JSONObject obj;
 
-                JSONObject obj = jsonArray.getJSONObject(0);
+                try {
+                    obj = jsonArray.getJSONObject(0);
+                } catch (Exception e) {
+                    return;
+                }
 
                 final Float pRate = Float.parseFloat(obj.getDouble("rate") + "");
                 runOnUiThread(new Runnable() {
