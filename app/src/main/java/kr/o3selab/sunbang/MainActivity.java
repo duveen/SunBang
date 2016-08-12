@@ -21,6 +21,8 @@ import com.daimajia.slider.library.Animations.DescriptionAnimation;
 import com.daimajia.slider.library.SliderLayout;
 import com.daimajia.slider.library.SliderTypes.BaseSliderView;
 import com.daimajia.slider.library.SliderTypes.DefaultSliderView;
+import com.kakao.kakaolink.KakaoLink;
+import com.kakao.kakaolink.KakaoTalkLinkMessageBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -57,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public ImageView mainSearchImageView;
     public ImageView footerLogoImageView;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // DB 정보 업데이트
         DB.context = this;
         DB.activity = this;
+
+
 
 
         // UI 이미지 커넥팅..
@@ -154,12 +160,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-
-        if (mainSearchImageView.isShown()) {
-            DB.sendToast("활성화!", 2);
-        } else {
-            DB.sendToast("노노!", 2);
+        Intent intent = getIntent();
+        boolean tf = intent.getBooleanExtra("room_flag", false);
+        if(tf) {
+            String roomSrl = intent.getStringExtra("room_srl");
+            intent = new Intent(MainActivity.this, RoomActivity.class);
+            intent.putExtra("srl", roomSrl);
+            startActivity(intent);
         }
+
     }
 
     // 메인 이미지 슬라이더 로딩 핸들러

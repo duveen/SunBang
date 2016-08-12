@@ -20,16 +20,31 @@
             android:theme="@style/FullScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="@string/kakao_scheme"
+                    android:host="@string/kakaolink_host" />
             </intent-filter>
+
+
         </activity>
+
         <activity android:name=".MainActivity" />
         <activity android:name=".Activity.NoticeActivity" />
         <activity android:name=".Activity.NoticeListActivity" />
-        <activity android:name=".Activity.RoomActivity" />
+        <activity android:name=".Activity.RoomActivity" >
+        </activity>
         <activity android:name=".Activity.SearchActivity" />
-        <activity android:name=".Activity.AllFindRoomActivity"></activity>
+        <activity android:name=".Activity.AllFindRoomActivity" />
+
+
+
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="@string/kakao_app_key" />
     </application>
 
 </manifest>

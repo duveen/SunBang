@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import com.kakao.kakaolink.KakaoLink;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -71,5 +73,7 @@ public class DB {
         editor = getSharedPreferences().edit();
         return editor;
     }
+
+
 
 }

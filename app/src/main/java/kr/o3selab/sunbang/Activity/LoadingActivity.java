@@ -377,12 +377,30 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
                 DB.roomList = roomList;
 
+
+
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        LoadingActivity.this.finish();
+
+                        Intent intent = LoadingActivity.this.getIntent();
+                        if(Intent.ACTION_VIEW.equals(intent.getAction())) {
+                            Uri uri = intent.getData();
+                            String temp_room_srl = uri.getQueryParameter("room_srl");
+                            intent = new Intent(LoadingActivity.this, MainActivity.class);
+                            intent.putExtra("room_flag", true);
+                            intent.putExtra("room_srl", temp_room_srl);
+                            startActivity(intent);
+                            LoadingActivity.this.finish();
+                        } else {
+                            intent = new Intent(LoadingActivity.this, MainActivity.class);
+                            intent.putExtra("room_flag", false);
+                            startActivity(intent);
+                            LoadingActivity.this.finish();
+                        }
+
+
                     }
                 });
             } catch (Exception e) {
