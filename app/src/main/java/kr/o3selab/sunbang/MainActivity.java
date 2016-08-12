@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public ImageView footerLogoImageView;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,8 +68,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // DB 정보 업데이트
         DB.context = this;
         DB.activity = this;
-
-
 
 
         // UI 이미지 커넥팅..
@@ -126,8 +123,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ThreadGroupHandler threadGroupHandler = new ThreadGroupHandler(mainGroup, pd);
         threadGroupHandler.start();
 
-        ;
-
         // 핸들러
         locationFrame.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,9 +155,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        //카카오톡 스킴 체크
         Intent intent = getIntent();
         boolean tf = intent.getBooleanExtra("room_flag", false);
-        if(tf) {
+        if (tf) {
             String roomSrl = intent.getStringExtra("room_srl");
             intent = new Intent(MainActivity.this, RoomActivity.class);
             intent.putExtra("srl", roomSrl);
@@ -319,8 +315,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-
-
+    // 메인 우선순위 별 원룸 리스트 로딩 핸들러
     public class GetMainRoomContentData implements Runnable {
         @Override
         public void run() {
@@ -334,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     LinearLayout parentLayout = null;
 
-                    for(int i = 0; i < list.size(); i=i+2) {
+                    for (int i = 0; i < list.size(); i = i + 2) {
                         parentLayout = new LinearLayout(MainActivity.this);
                         parentLayout.setOrientation(LinearLayout.HORIZONTAL);
                         parentLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -347,7 +342,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         try {
                             content = list.get(i + 1);
-                            LinearLayout layout2 = new MainRoomContentLayout(MainActivity. this,content.roomSrl, content.nick_name, content.title, content.image, content.money, content.rate);
+                            LinearLayout layout2 = new MainRoomContentLayout(MainActivity.this, content.roomSrl, content.nick_name, content.title, content.image, content.money, content.rate);
                             layout2.setLayoutParams(new LinearLayout.LayoutParams(m0dp, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
                             layout2.setWeightSum(1);
                             parentLayout.addView(layout2);

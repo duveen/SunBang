@@ -19,7 +19,6 @@ import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -322,7 +321,10 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         }
     }
 
-    // 메인 우선순위별 원룸 리스트 로딩 핸들러
+
+    // =======================================
+    //   우선 순위 별 원룸 리스트 로딩 및 카카오 스킴 플래그 체크
+    // =======================================
     public class GetMainRoomContentData implements Runnable {
         @Override
         public void run() {
@@ -365,19 +367,17 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     String rate;
 
                     try {
-                        if(value.getString("rate").equals("null"))
+                        if (value.getString("rate").equals("null"))
                             rate = "★ 평가없음";
                         else rate = "★ " + value.getString("rate");
                     } catch (Exception e) {
                         rate = "★ 평가없음";
                     }
 
-                    roomList.add(new RoomContent(roomSrl+"", nickName, title, image, money, rate));
+                    roomList.add(new RoomContent(roomSrl + "", nickName, title, image, money, rate));
                 }
 
                 DB.roomList = roomList;
-
-
 
 
                 runOnUiThread(new Runnable() {
@@ -385,7 +385,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     public void run() {
 
                         Intent intent = LoadingActivity.this.getIntent();
-                        if(Intent.ACTION_VIEW.equals(intent.getAction())) {
+                        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
                             Uri uri = intent.getData();
                             String temp_room_srl = uri.getQueryParameter("room_srl");
                             intent = new Intent(LoadingActivity.this, MainActivity.class);
@@ -399,18 +399,18 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                             startActivity(intent);
                             LoadingActivity.this.finish();
                         }
-
-
                     }
                 });
             } catch (Exception e) {
                 DB.sendToast("ErrorCode 21:" + e.getMessage(), 2);
             }
         }
-
-
     }
 
+
+    // =======================================
+    //   방 정보 클래스
+    // =======================================
     public class RoomContent {
         public String nick_name;
         public String title;
