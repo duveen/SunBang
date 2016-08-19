@@ -17,6 +17,9 @@ import kr.o3selab.sunbang.Activity.LoadingActivity;
  */
 public class DB {
 
+    //개발자 모드
+    public static boolean debug = true;
+
     //버전 정보
     public static double version = 1.0007;
 
@@ -36,8 +39,32 @@ public class DB {
 
     //메인 이미지 슬라이더
     public static HashMap<String, String> mainImages;
-
     public static LinkedList<LoadingActivity.RoomContent> roomList;
+
+    // 위치 정보
+    public static HashMap<String, Double> sLocationLat;
+    public static HashMap<String, Double> sLocationLng;
+    public static final String MAIN_BUILDING = "sMainBuilding";
+    public static final String ENGINEERING_BUILDING = "sEngineeringBuilding";
+    public static final String WONHWAKWAN = "sWonhwakwan";
+    public static final String NATURE_SCIENCE_BUILDING = "sNatureScienceBuilding";
+    public static final String LIBERAL_ARTS_BUILDING = "sLiberalArtsBuilding";
+    public static final String HOSPITAL_BUILDING = "sHospitalBuilding";
+    public static void updateLocation() {
+        sLocationLat.put("sMainBuilding", 36.80022619356785);
+        sLocationLng.put("sMainBuilding", 127.07495224085592);
+        sLocationLat.put("sEngineeringBuilding", 36.80014881099762);
+        sLocationLng.put("sEngineeringBuilding", 127.07259066506715);
+        sLocationLat.put("sWonhwakwan", 36.800121110489364);
+        sLocationLng.put("sWonhwakwan", 127.07722679752683);
+        sLocationLat.put("sNatureScienceBuilding", 36.798748938187586);
+        sLocationLng.put("sNatureScienceBuilding", 127.07404319502567);
+        sLocationLat.put("sLiberalArtsBuilding", 36.798779336811386);
+        sLocationLng.put("sLiberalArtsBuilding", 127.07585283529149);
+        sLocationLat.put("sHospitalBuilding", 36.79914030750248);
+        sLocationLng.put("sHospitalBuilding", 127.07851439634625);
+    }
+
 
     //다음 지도 apiKey
     public static String mapApiKey = "1011c8a2c4d75d3594f6f3e1fc22901f";

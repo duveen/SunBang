@@ -39,6 +39,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -98,6 +99,8 @@ public class RoomActivity extends AppCompatActivity {
     public FrameLayout contactLayout;
 
     public MapView mapView;
+
+    public int position;
 
     // 데이터
     public boolean mapFlag = false;
@@ -307,7 +310,6 @@ public class RoomActivity extends AppCompatActivity {
         try {
             mapView = new MapView(this);
             mapView.setDaumMapApiKey(DB.mapApiKey);
-            MapView.setMapTilePersistentCacheEnabled(true);
             mapView.zoomOut(false);
             mapView.zoomIn(false);
 
@@ -330,7 +332,7 @@ public class RoomActivity extends AppCompatActivity {
                 String param = URLP.PARAM_DOCUMENT_SRL + roomSrl;
                 String result = new JsonHandler(URLP.ROOM_IMAGE_LIST, param).execute().get();
 
-                final Vector<String> images = new Vector<String>();
+                final ArrayList<String> images = new ArrayList<>();
 
                 JSONObject jsonObject = new JSONObject(result);
                 JSONArray jsonArray = jsonObject.getJSONArray("result");
@@ -347,10 +349,10 @@ public class RoomActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Vector<String> mainImages = images;
+                        final ArrayList<String> mainImages = images;
 
                         for (int i = 0; i < mainImages.size(); i++) {
-
+                            final int position = i;
                             DefaultSliderView textSliderView = new DefaultSliderView(RoomActivity.this);
                             textSliderView
                                     .image(mainImages.get(i))
@@ -358,12 +360,9 @@ public class RoomActivity extends AppCompatActivity {
                                     .setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
                                         @Override
                                         public void onSliderClick(BaseSliderView slider) {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Toast.makeText(RoomActivity.this, "이미지 사진 클릭", Toast.LENGTH_SHORT).show();
-                                                }
-                                            });
+                                            Intent intent = new Intent(RoomActivity.this, RoomImageActivity.class);
+                                            intent.putExtra("url", mainImages.get(position));
+                                            startActivity(intent);
                                         }
                                     });
                             roomImageLayout.addSlider(textSliderView);

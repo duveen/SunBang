@@ -2,6 +2,7 @@ package kr.o3selab.sunbang;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -364,10 +365,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
-
+        Intent intent;
         switch (id) {
             case R.id.nav_notice:
-                Intent intent = new Intent(MainActivity.this, NoticeListActivity.class);
+                intent = new Intent(MainActivity.this, NoticeListActivity.class);
+                startActivity(intent);
+                break;
+
+            case R.id.nav_location:
+                intent = new Intent(MainActivity.this, AllFindRoomActivity.class);
+                startActivity(intent);
+                break;
+
+            case R.id.nav_money:
+                DB.sendToast("개발 중...", 1);
+                break;
+
+            case R.id.nav_search:
+                intent = new Intent(MainActivity.this, SearchActivity.class);
+                startActivity(intent);
+                break;
+
+            case R.id.nav_kakao:
+                String url = "https://open.kakao.com/o/sy4tHmm";
+                intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
                 startActivity(intent);
                 break;
 

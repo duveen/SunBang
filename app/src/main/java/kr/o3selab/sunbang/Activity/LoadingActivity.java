@@ -18,6 +18,8 @@ import android.util.Log;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
+import net.daum.mf.map.api.MapView;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -44,8 +46,15 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
 
+        MapView.setMapTilePersistentCacheEnabled(true);
+
         DB.context = this;
         DB.activity = this;
+
+        DB.sLocationLat = new HashMap<>();
+        DB.sLocationLng = new HashMap<>();
+
+        DB.updateLocation();
 
         try {
             getPermission();
@@ -228,13 +237,18 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             String mID = Settings.Secure.getString(LoadingActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
             String mPhoneNumber = tMgr.getLine1Number();
 
+            if(mPhoneNumber == null) {
+                if(DB.debug) mPhoneNumber = "01000000000";
+                else throw new Exception("USIM이 장착되지 않은 휴대폰은 사용이 어렵습니다. 죄송합니다.");
+            }
+
             if (mPhoneNumber.contains("+82")) {
                 mPhoneNumber = mPhoneNumber.replace("+82", "0");
             }
 
             SharedPreferences sharedPreferences = DB.getSharedPreferences();
             if (!sharedPreferences.getString(DB.DEVICE_ID, "").equals(mID) ||
-                    !sharedPreferences.getString(DB.DEVICE_ID, "").equals(mPhoneNumber)) {
+                    !sharedPreferences.getString(DB.PHONE_NUMBER, "").equals(mPhoneNumber)) {
 
                 SharedPreferences.Editor editor = DB.getEditor();
                 editor.putString(DB.DEVICE_ID, mID);
@@ -250,6 +264,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
 
             Thread th = new Thread(new GetMainImageData());
             th.start();
+
         } catch (Exception e) {
             DB.sendToast("Error Code 3: " + e.getMessage(), 2);
             DB.sendToast("프로그램을 종료합니다.", 2);
@@ -402,7 +417,7 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                     }
                 });
             } catch (Exception e) {
-                DB.sendToast("ErrorCode 21:" + e.getMessage(), 2);
+                DB.sendToast("ErrorCode 24:" + e.getMessage(), 2);
             }
         }
     }

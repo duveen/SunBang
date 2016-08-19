@@ -2,17 +2,25 @@ package kr.o3selab.sunbang.Activity;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 
 import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
@@ -21,25 +29,38 @@ import net.daum.mf.map.api.MapView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Instance.JsonHandler;
 import kr.o3selab.sunbang.Instance.SunbangProgress;
 import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
 import kr.o3selab.sunbang.Instance.URLP;
+import kr.o3selab.sunbang.Layout.AllFindRoomListView;
 import kr.o3selab.sunbang.R;
 
-public class AllFindRoomActivity extends AppCompatActivity implements MapView.POIItemEventListener {
+public class AllFindRoomActivity extends AppCompatActivity implements MapView.POIItemEventListener,
+        DialogInterface.OnClickListener, LocationListener {
     public ProgressDialog pd;
     public MapView mapView;
     public ImageView undoIc;
     public ImageView selectIc;
+
+    public double lat;
+    public double lng;
+
+    public boolean listFlag = false;
+
+    AlertDialog.Builder adb;
+
     public final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
+
+    public LocationManager locationManager = null;
+    public String provider = null;
+
+    public String[] menus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +70,12 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         DB.activity = this;
         DB.context = this;
 
+        List<String> menuList = setListMenu();
+
+        menus = new String[menuList.size()];
+        menus = menuList.toArray(menus);
+
+        // 뒤로가기 아이콘
         undoIc = (ImageView) findViewById(R.id.activity_all_find_ic_undo);
         undoIc.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,15 +84,23 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             }
         });
 
+        // 메뉴바 설정
+        adb = new AlertDialog.Builder(this);
+        adb.setTitle("메뉴");
+        adb.setItems(menus, this);
+
         selectIc = (ImageView) findViewById(R.id.activity_all_find_ic_select);
         selectIc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                adb.show();
             }
         });
 
+        // 프로그래스바
         pd = new SunbangProgress(this);
+
+        getPermission();
     }
 
     @Override
@@ -75,16 +110,38 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         DB.activity = this;
         DB.context = this;
 
-        getPermission();
+        getLoadMap();
+
+        if(locationManager != null) {
+            try {
+                locationManager.requestLocationUpdates(provider, 500, 1, this);
+            } catch (SecurityException e) {
+                DB.sendToast("ErrorCode 26: " + e.getMessage(), 2);
+            }
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_map_view);
+        if(mapView != null) {
+            mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOff);
+            mapView.setShowCurrentLocationMarker(false);
+        }
+
+        ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
         mapViewContainer.removeAllViews();
+
+        if(locationManager != null) {
+            try {
+                locationManager.removeUpdates(this);
+            } catch (SecurityException e) {
+                DB.sendToast("ErrorCode 27: " + e.getMessage(), 2);
+            }
+        }
     }
+
 
     // =======================================
     //   퍼미션 권한 획득
@@ -92,7 +149,10 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public void getPermission() {
         if (ContextCompat.checkSelfPermission(AllFindRoomActivity.this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(AllFindRoomActivity.this,
+                        Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(AllFindRoomActivity.this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -100,10 +160,8 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             }
 
             ActivityCompat.requestPermissions(AllFindRoomActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                     MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-        } else {
-            getLoadMap();
         }
     }
 
@@ -116,9 +174,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    getLoadMap();
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 } else {
                     DB.sendToast("권한이 없습니다. 다시 실행 해주세요!", 2);
                     AllFindRoomActivity.this.finish();
@@ -134,16 +190,20 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     // =======================================
     public void getLoadMap() {
         try {
+            updateMenuList(false);
+
+            ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
+            mapViewContainer.removeAllViews();
+            mapViewContainer.removeAllViewsInLayout();
+
             mapView = new MapView(this);
             mapView.setDaumMapApiKey(DB.mapApiKey);
             mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(36.80024647035301, 127.07494945930536), true);
             mapView.setZoomLevel(-1, true);
-            MapView.setMapTilePersistentCacheEnabled(true);
             mapView.setPOIItemEventListener(this);
             mapView.zoomIn(true);
             mapView.zoomOut(true);
 
-            ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_map_view);
             mapViewContainer.addView(mapView);
 
             Thread getLocationPoint = new Thread(new GetLocationPoint());
@@ -157,6 +217,67 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         } catch (Exception e) {
             // DB.sendToast(e.getMessage(), 2);
         }
+    }
+
+
+    // =======================================
+    //   GPS 정보 로딩 메소드
+    // =======================================
+    public void getGpsInfo() {
+        // GPS 정보
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        if(!enabled) {
+            new AlertDialog.Builder(AllFindRoomActivity.this)
+                    .setTitle("알림")
+                    .setMessage("GPS가 비활성화 되어 있습니다. 활성화 하시겠습니까?")
+                    .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent (Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton("아니오", null)
+                    .show();
+        }
+
+        Criteria c = new Criteria();
+        provider = locationManager.getBestProvider(c, true);
+
+        if (provider == null || !locationManager.isProviderEnabled(provider)) {
+            List<String> list = locationManager.getAllProviders();
+            for (int i = 0; i < list.size(); i++) {
+                String temp = list.get(i);
+                if (locationManager.isProviderEnabled(temp)) {
+                    provider = temp;
+                    break;
+                }
+            }
+        }
+
+        try {
+            Location location = locationManager.getLastKnownLocation(provider);
+            if (location == null) {
+                DB.sendToast("이용가능한 장치가 없습니다.", 1);
+            } else {
+                onLocationChanged(location);
+            }
+        } catch (SecurityException e) {
+            DB.sendToast("ErrorCode 25: " + e.getMessage(), 2);
+        }
+    }
+
+    // =======================================
+    //   위치 변경 콜백 메소드
+    // =======================================
+    @Override
+    public void onLocationChanged(Location location) {
+        double lat = location.getLatitude();
+        double lng = location.getLongitude();
+        this.lat = lat;
+        this.lng = lng;
     }
 
 
@@ -231,7 +352,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
 
     // =======================================
-    //   말풍선 클릭시 호출되는 콜백
+    //   말풍선 클릭시 호출되는 콜백 메소드
     // =======================================
     @Override
     public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem, MapPOIItem.CalloutBalloonButtonType calloutBalloonButtonType) {
@@ -242,6 +363,99 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         Intent intent = new Intent(AllFindRoomActivity.this, RoomActivity.class);
         intent.putExtra("srl", tag + "");
         startActivity(intent);
+    }
+
+
+    // =======================================
+    //   메뉴 버튼 클릭 이벤트 메소드
+    // =======================================
+    @Override
+    public void onClick(DialogInterface dialog, int which) {
+
+        String clickedItemValue = Arrays.asList(menus).get(which);
+        switch (clickedItemValue) {
+            case "내 위치 보기 ON":
+                mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeadingWithoutMapMoving);
+                break;
+
+            case "내 위치 보기 OFF":
+                mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOff);
+                mapView.setShowCurrentLocationMarker(false);
+                break;
+
+            case "리스트로 보기":
+                new Thread(new GetRoomListByOrder()).start();
+                break;
+
+            case "지도로 보기":
+                getLoadMap();
+                break;
+
+            case "내 좌표 보기":
+                Location hostLocation = new Location(provider);
+                hostLocation.setLatitude(DB.sLocationLat.get(DB.MAIN_BUILDING));
+                hostLocation.setLongitude(DB.sLocationLng.get(DB.MAIN_BUILDING));
+
+                Location roomLocation = new Location(provider);
+                roomLocation.setLatitude(lat);
+                roomLocation.setLongitude(lng);
+
+                DB.sendToast("제공자: " + provider + ", 위도:" + lat + ", 경도:" + lng + ", 본관 까지의 거리: " + hostLocation.distanceTo(roomLocation), 1);
+                mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(lat, lng), true);
+                break;
+        }
+    }
+
+
+    // =======================================
+    //   리스트 정보 불러오기 메소드
+    // =======================================
+    public class GetRoomListByOrder implements Runnable {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
+                    mapViewContainer.removeAllViews();
+
+                    updateMenuList(true);
+
+                    ScrollView scrollView = new AllFindRoomListView(AllFindRoomActivity.this);
+                    mapViewContainer.addView(scrollView);
+                }
+            });
+
+
+
+        }
+    }
+
+
+    // =======================================
+    //   리스트 메뉴 아이템 설정
+    // =======================================
+    public List<String> setListMenu() {
+        List<String> menuList = new ArrayList<>();
+        menuList.add("내 위치 보기 ON");
+        menuList.add("내 위치 보기 OFF");
+        if (!listFlag) menuList.add("리스트로 보기");
+        else menuList.add("지도로 보기");
+        if (DB.debug) menuList.add("내 좌표 보기");
+
+        return menuList;
+    }
+
+
+    // =======================================
+    //   리스트 메뉴 업데이트
+    // =======================================
+    public void updateMenuList(boolean flag) {
+        listFlag = flag;
+        List<String> menuList = setListMenu();
+        this.menus = new String[menuList.size()];
+        menus = menuList.toArray(menus);
+        adb.setItems(menus, AllFindRoomActivity.this);
     }
 
 
@@ -260,21 +474,23 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {
     }
 
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
 
-    // =======================================
-    //   리스트 정보 불러오기 메소드
-    // =======================================
-
-    public class GetRoomListByOrder extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            // URL url = DB.BASE_URL +
-
-
-            return null;
-        }
     }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+
+
+
 
 
 }

@@ -40,7 +40,7 @@
             android:layout_height="50dp"
             android:id="@+id/activity_all_find_ic_select"
             android:layout_gravity="right|center_vertical"
-            android:src="@drawable/ic_view_list"
+            android:src="@drawable/ic_more_button"
             android:focusableInTouchMode="false"
             android:tint="#ffffff"
             android:padding="7dp"
@@ -53,11 +53,31 @@
         android:layout_height="2dp"
         android:background="#4c6aa5"/>
 
-    <!--지도 컨텐츠-->
+
+    <!--컨텐츠-->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/activity_all_find_room_map_view">
+        android:id="@+id/activity_all_find_room_container">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/activity_all_find_list_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+
+
+
+
+            </LinearLayout>
+
+        </ScrollView>
+
     </RelativeLayout>
 
 </LinearLayout>
