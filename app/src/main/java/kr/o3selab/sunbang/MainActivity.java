@@ -8,7 +8,6 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,8 +21,6 @@ import com.daimajia.slider.library.Animations.DescriptionAnimation;
 import com.daimajia.slider.library.SliderLayout;
 import com.daimajia.slider.library.SliderTypes.BaseSliderView;
 import com.daimajia.slider.library.SliderTypes.DefaultSliderView;
-import com.kakao.kakaolink.KakaoLink;
-import com.kakao.kakaolink.KakaoTalkLinkMessageBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -46,7 +43,6 @@ import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
 import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.Layout.MainNoticeLinearLayout;
 import kr.o3selab.sunbang.Layout.MainRoomContentLayout;
-import kr.o3selab.sunbang.Layout.MainRoomLinearLayout;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public ProgressDialog pd;
@@ -55,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public FrameLayout moneyFrame;
     public LinearLayout mainRoomContentLayout;
     public LinearLayout mainNoticeLayout;
-    public LinearLayout mainRoomLayout;
     public TextView mainNoticeTextView;
     public ImageView mainSearchImageView;
     public ImageView footerLogoImageView;
@@ -78,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mainNoticeLayout = (LinearLayout) findViewById(R.id.main_notice_layout);
         mainNoticeTextView = (TextView) findViewById(R.id.main_notice_view);
         mainRoomContentLayout = (LinearLayout) findViewById(R.id.activity_main_room_content_list);
-        mainRoomLayout = (LinearLayout) findViewById(R.id.main_room_layout);
         mainSearchImageView = (ImageView) findViewById(R.id.activity_main_ic_search);
         footerLogoImageView = (ImageView) findViewById(R.id.main_footer_logo_image);
 
@@ -112,9 +106,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Thread getNoticeListDataThread = new Thread(new GetMainNoticeListData());
         getNoticeListDataThread.start();
-
-        // Thread getRoomListDataThread = new Thread(new GetMainRoomListData());
-        // getRoomListDataThread.start();
 
         Thread getMainRoomContentData = new Thread(new GetMainRoomContentData());
         getMainRoomContentData.start();
@@ -274,49 +265,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
     }
-
-    // 메인 최근 등록 원룸 리스트 로딩 핸들러
-    /*
-    public class GetMainRoomListData implements Runnable {
-
-        @Override
-        public void run() {
-
-            try {
-                String param = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
-                String result = new JsonHandler(URLP.MAIN_ROOM_LIST, param).execute().get();
-
-                JSONObject jsonObject = new JSONObject(result);
-                JSONArray jsonArray = jsonObject.getJSONArray("result");
-
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject obj = jsonArray.getJSONObject(i);
-
-                    final String title = obj.getString("title");
-                    final String document_id = obj.getString("document_id");
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            MainRoomLinearLayout linear = new MainRoomLinearLayout(MainActivity.this, title);
-                            linear.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    Intent intent = new Intent(MainActivity.this, RoomActivity.class);
-                                    intent.putExtra("srl", document_id);
-                                    startActivity(intent);
-                                }
-                            });
-                            mainRoomLayout.addView(linear);
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                DB.sendToast("ErrorCode 7: " + e.getMessage(), 2);
-            }
-        }
-    }
-    */
 
     // 메인 우선순위 별 원룸 리스트 로딩 핸들러
     public class GetMainRoomContentData implements Runnable {
