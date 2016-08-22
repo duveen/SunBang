@@ -113,13 +113,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Thread getNoticeListDataThread = new Thread(new GetMainNoticeListData());
         getNoticeListDataThread.start();
 
-        Thread getRoomListDataThread = new Thread(new GetMainRoomListData());
-        getRoomListDataThread.start();
+        // Thread getRoomListDataThread = new Thread(new GetMainRoomListData());
+        // getRoomListDataThread.start();
 
         Thread getMainRoomContentData = new Thread(new GetMainRoomContentData());
         getMainRoomContentData.start();
 
-        Thread[] mainGroup = {getImageListShowThread, getNoticeListDataThread, getRoomListDataThread, getMainRoomContentData};
+        Thread[] mainGroup = {getImageListShowThread, getNoticeListDataThread, getMainRoomContentData};
 
         ThreadGroupHandler threadGroupHandler = new ThreadGroupHandler(mainGroup, pd);
         threadGroupHandler.start();
@@ -276,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     // 메인 최근 등록 원룸 리스트 로딩 핸들러
+    /*
     public class GetMainRoomListData implements Runnable {
 
         @Override
@@ -315,6 +316,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
     }
+    */
 
     // 메인 우선순위 별 원룸 리스트 로딩 핸들러
     public class GetMainRoomContentData implements Runnable {
