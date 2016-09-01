@@ -51,10 +51,23 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
         DB.context = this;
         DB.activity = this;
 
+        // 건물 위치 정보 저장
         DB.sLocationLat = new HashMap<>();
         DB.sLocationLng = new HashMap<>();
 
         DB.updateLocation();
+
+
+        // 기본 값 로딩
+        SharedPreferences sharedPreferences = DB.getSharedPreferences();
+        DB.defaultBuilding = sharedPreferences.getString(DB.DEFAULT_BUILDING, null);
+
+        if(DB.defaultBuilding == null) {
+            SharedPreferences.Editor editor = DB.getEditor();
+            editor.putString(DB.DEFAULT_BUILDING, DB.MAIN_BUILDING);
+            editor.commit();
+        }
+
 
         try {
             getPermission();

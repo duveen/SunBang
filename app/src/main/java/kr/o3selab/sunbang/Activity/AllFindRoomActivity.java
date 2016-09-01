@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -56,9 +55,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     AlertDialog.Builder adb;
 
     public final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
-
-    public LocationManager locationManager = null;
-    public String provider = null;
 
     public String[] menus;
 
@@ -111,35 +107,19 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         DB.context = this;
 
         getLoadMap();
-
-        if(locationManager != null) {
-            try {
-                locationManager.requestLocationUpdates(provider, 500, 1, this);
-            } catch (SecurityException e) {
-                DB.sendToast("ErrorCode 26: " + e.getMessage(), 2);
-            }
-        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        if(mapView != null) {
+        if (mapView != null) {
             mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOff);
             mapView.setShowCurrentLocationMarker(false);
         }
 
         ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
         mapViewContainer.removeAllViews();
-
-        if(locationManager != null) {
-            try {
-                locationManager.removeUpdates(this);
-            } catch (SecurityException e) {
-                DB.sendToast("ErrorCode 27: " + e.getMessage(), 2);
-            }
-        }
     }
 
 
@@ -219,55 +199,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         }
     }
 
-
-    // =======================================
-    //   GPS 정보 로딩 메소드
-    // =======================================
-    public void getGpsInfo() {
-        // GPS 정보
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if(!enabled) {
-            new AlertDialog.Builder(AllFindRoomActivity.this)
-                    .setTitle("알림")
-                    .setMessage("GPS가 비활성화 되어 있습니다. 활성화 하시겠습니까?")
-                    .setPositiveButton("네", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent (Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                            startActivity(intent);
-                        }
-                    })
-                    .setNegativeButton("아니오", null)
-                    .show();
-        }
-
-        Criteria c = new Criteria();
-        provider = locationManager.getBestProvider(c, true);
-
-        if (provider == null || !locationManager.isProviderEnabled(provider)) {
-            List<String> list = locationManager.getAllProviders();
-            for (int i = 0; i < list.size(); i++) {
-                String temp = list.get(i);
-                if (locationManager.isProviderEnabled(temp)) {
-                    provider = temp;
-                    break;
-                }
-            }
-        }
-
-        try {
-            Location location = locationManager.getLastKnownLocation(provider);
-            if (location == null) {
-                DB.sendToast("이용가능한 장치가 없습니다.", 1);
-            } else {
-                onLocationChanged(location);
-            }
-        } catch (SecurityException e) {
-            DB.sendToast("ErrorCode 25: " + e.getMessage(), 2);
-        }
-    }
 
     // =======================================
     //   위치 변경 콜백 메소드
@@ -375,7 +306,26 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         String clickedItemValue = Arrays.asList(menus).get(which);
         switch (clickedItemValue) {
             case "내 위치 보기 ON":
-                mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeadingWithoutMapMoving);
+                // GPS 정보
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+                if (!enabled) {
+                    new AlertDialog.Builder(AllFindRoomActivity.this)
+                            .setTitle("알림")
+                            .setMessage("GPS가 비활성화 되어 있습니다. 활성화 하시겠습니까?")
+                            .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                    startActivity(intent);
+
+                                    mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeadingWithoutMapMoving);
+                                }
+                            })
+                            .setNegativeButton("아니오", null)
+                            .show();
+                }
                 break;
 
             case "내 위치 보기 OFF":
@@ -389,19 +339,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
             case "지도로 보기":
                 getLoadMap();
-                break;
-
-            case "내 좌표 보기":
-                Location hostLocation = new Location(provider);
-                hostLocation.setLatitude(DB.sLocationLat.get(DB.MAIN_BUILDING));
-                hostLocation.setLongitude(DB.sLocationLng.get(DB.MAIN_BUILDING));
-
-                Location roomLocation = new Location(provider);
-                roomLocation.setLatitude(lat);
-                roomLocation.setLongitude(lng);
-
-                DB.sendToast("제공자: " + provider + ", 위도:" + lat + ", 경도:" + lng + ", 본관 까지의 거리: " + hostLocation.distanceTo(roomLocation), 1);
-                mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(lat, lng), true);
                 break;
         }
     }
@@ -425,7 +362,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                     mapViewContainer.addView(scrollView);
                 }
             });
-
 
 
         }
@@ -488,9 +424,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public void onProviderDisabled(String provider) {
 
     }
-
-
-
 
 
 }

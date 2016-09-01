@@ -64,6 +64,26 @@ public class DB {
         sLocationLat.put("sHospitalBuilding", 36.79914030750248);
         sLocationLng.put("sHospitalBuilding", 127.07851439634625);
     }
+    public static String getLocationName(String location) {
+        switch(location) {
+            case MAIN_BUILDING:
+                return "본관";
+            case ENGINEERING_BUILDING:
+                return "공학관";
+            case WONHWAKWAN:
+                return "원화관";
+            case NATURE_SCIENCE_BUILDING:
+                return "자연관";
+            case LIBERAL_ARTS_BUILDING:
+                return "인문관";
+            case HOSPITAL_BUILDING:
+                return "보건관";
+        }
+
+        return null;
+    }
+    public static final String DEFAULT_BUILDING = "dBuilding";
+    public static String defaultBuilding = MAIN_BUILDING;
 
 
     //다음 지도 apiKey
