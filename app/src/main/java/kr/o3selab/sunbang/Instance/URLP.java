@@ -14,6 +14,8 @@ public class URLP {
     public static final String MAIN_ROOM_LIST;
     public static final String MAIN_ROOM_CONTENT;
     public static final String MAIN_ROOM_CONTENT_LIST;
+    public static final String FIND_ROOM_LIST;
+    public static final String FIND_ROOM_INFO;
     public static final String NOTICE_LIST_DOCUMENT_COUNT;
     public static final String NOTICE_LIST_DOCUMENT_LIMIT;
     public static final String NOTICE_DOCUMENT;
@@ -48,6 +50,8 @@ public class URLP {
         MAIN_ROOM_LIST = API_URL + "getMainRoomListData.php";
         MAIN_ROOM_CONTENT_LIST = API_URL + "getMainRoomContentList.php";
         MAIN_ROOM_CONTENT = API_URL + "getMainRoomContentData.php";
+        FIND_ROOM_LIST = API_URL + "getFindRoomList.php";
+        FIND_ROOM_INFO = API_URL + "getFindRoomInfo.php";
         NOTICE_LIST_DOCUMENT_COUNT = API_URL + "getNoticeListCount.php";
         NOTICE_LIST_DOCUMENT_LIMIT = API_URL + "getNoticeListData.php";
         NOTICE_DOCUMENT = API_URL + "getNoticeContent.php";

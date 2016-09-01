@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
 import net.daum.mf.map.api.MapPOIItem;
@@ -31,12 +32,14 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Instance.JsonHandler;
 import kr.o3selab.sunbang.Instance.SunbangProgress;
 import kr.o3selab.sunbang.Instance.ThreadGroupHandler;
 import kr.o3selab.sunbang.Instance.URLP;
+import kr.o3selab.sunbang.Layout.AllFindRoomListItemView;
 import kr.o3selab.sunbang.Layout.AllFindRoomListView;
 import kr.o3selab.sunbang.R;
 
@@ -350,6 +353,33 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public class GetRoomListByOrder implements Runnable {
         @Override
         public void run() {
+            final Vector<String> roomData = new Vector<>();
+
+            try {
+                String listParam = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
+                String listResult = new JsonHandler(URLP.FIND_ROOM_LIST, listParam).execute().get();
+
+                JSONObject listJSONObject = new JSONObject(listResult);
+                JSONArray listJSONArray = listJSONObject.getJSONArray("result");
+
+                for(int i = 0; i < listJSONArray.length(); i++) {
+                    String roomSrl = listJSONArray.getJSONObject(i).getString("srl");
+
+                    String roomParam = URLP.PARAM_DOCUMENT_SRL + roomSrl;
+                    String roomResult = new JsonHandler(URLP.FIND_ROOM_INFO, roomParam).execute().get();
+
+                    JSONObject roomJSONObject = new JSONObject(roomResult);
+                    JSONArray roomJSONArray = roomJSONObject.getJSONArray("result");
+
+                    String result = roomJSONArray.getJSONObject(0).getString("info");
+
+                    roomData.add(result);
+                }
+
+            } catch (Exception e) {
+                DB.sendToast("ErrorCode 28: " + e.getMessage(), 2);
+            }
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -360,10 +390,15 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
                     ScrollView scrollView = new AllFindRoomListView(AllFindRoomActivity.this);
                     mapViewContainer.addView(scrollView);
+
+                    LinearLayout parentLayout = (LinearLayout) scrollView.findViewById(R.id.activity_all_find_list_layout);
+
+                    for(int i = 0; i < roomData.size(); i++) {
+                        LinearLayout linearLayout = new AllFindRoomListItemView(AllFindRoomActivity.this, roomData.get(i));
+                        parentLayout.addView(linearLayout);
+                    }
                 }
             });
-
-
         }
     }
 

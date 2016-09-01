@@ -13,7 +13,7 @@ $result = array();
    
 while($row = mysqli_fetch_array($res)){  
   array_push($result,  
-    array('document_srl'=>$row[0])
+    array('info'=>$row[0])
 	);  
 }  
    
