@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide;
 import java.util.StringTokenizer;
 
 import kr.o3selab.sunbang.Instance.DB;
+import kr.o3selab.sunbang.Instance.URLP;
 import kr.o3selab.sunbang.R;
 
 public class AllFindRoomListItemView extends LinearLayout {
@@ -39,12 +40,12 @@ public class AllFindRoomListItemView extends LinearLayout {
         roomLocation.setLatitude(DB.sLocationLat.get(DB.defaultBuilding));
         roomLocation.setLongitude(DB.sLocationLng.get(DB.defaultBuilding));
 
-        double distance = hostLocation.distanceTo(roomLocation) / 100;
+        double distance = hostLocation.distanceTo(roomLocation);
 
         View view = inflate(context, R.layout.activity_all_find_room_list_item, this);
 
         ImageView itemImage = (ImageView) view.findViewById(R.id.activity_all_find_list_layout_image_view);
-        Glide.with(context).load(imageUrl).into(itemImage);
+        Glide.with(context).load(URLP.BASE_URL + imageUrl).into(itemImage);
 
         TextView moneyView = (TextView) view.findViewById(R.id.activity_all_find_list_layout_money);
         moneyView.setText(deposit + " / " + money);
@@ -53,6 +54,6 @@ public class AllFindRoomListItemView extends LinearLayout {
         optionView.setText(moneyType + " | " + roomType + " | " + adminMoney);
 
         TextView locationView = (TextView) view.findViewById(R.id.activity_all_find_list_layout_distance);
-        locationView.setText(DB.getLocationName(DB.defaultBuilding) +" 까지의 거리 : " + distance + "m");
+        locationView.setText(DB.getLocationName(DB.defaultBuilding) +" 까지의 거리 : " + (int) distance + "m");
     }
 }

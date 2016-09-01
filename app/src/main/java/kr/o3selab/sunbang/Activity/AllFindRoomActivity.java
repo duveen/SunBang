@@ -109,7 +109,8 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         DB.activity = this;
         DB.context = this;
 
-        getLoadMap();
+        if(!listFlag) getLoadMap();
+        else new Thread(new GetRoomListByOrder()).start();
     }
 
     @Override
@@ -389,6 +390,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                     updateMenuList(true);
 
                     ScrollView scrollView = new AllFindRoomListView(AllFindRoomActivity.this);
+                    scrollView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                     mapViewContainer.addView(scrollView);
 
                     LinearLayout parentLayout = (LinearLayout) scrollView.findViewById(R.id.activity_all_find_list_layout);
