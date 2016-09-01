@@ -44,6 +44,7 @@
         <activity android:name=".Activity.RoomActivity" />
         <activity android:name=".Activity.SearchActivity" />
         <activity android:name=".Activity.AllFindRoomActivity" />
+        <activity android:name=".Activity.AboutCostActivity" />
 
         <meta-data
             android:name="com.kakao.sdk.AppKey"
