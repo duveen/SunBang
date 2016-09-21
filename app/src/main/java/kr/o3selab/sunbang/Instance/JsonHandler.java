@@ -10,9 +10,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-/**
- * Created by duvee on 2016-08-09.
- */
 public class JsonHandler extends AsyncTask<Void, Void, String> {
 
     private URL url;

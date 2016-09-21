@@ -17,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -33,7 +34,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import kr.o3selab.sunbang.Instance.DB;
@@ -88,7 +89,9 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
         // 설정 아이콘
         settingsIc = (ImageView) findViewById(R.id.activity_all_find_ic_setting);
-        settingsIc.setVisibility(View.GONE);
+        if (settingsIc != null) {
+            settingsIc.setVisibility(View.GONE);
+        }
 
 
         // 메뉴바 설정
@@ -118,7 +121,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         DB.context = this;
 
         if (!listFlag) getLoadMap();
-        else new Thread(new GetRoomListByOrder(1)).start();
     }
 
     @Override
@@ -130,8 +132,12 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             mapView.setShowCurrentLocationMarker(false);
         }
 
-        ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
-        mapViewContainer.removeAllViews();
+        if(!listFlag) {
+            ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
+            if (mapViewContainer != null) {
+                mapViewContainer.removeAllViews();
+            }
+        }
     }
 
 
@@ -166,12 +172,10 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                } else {
+                if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                     DB.sendToast("권한이 없습니다. 다시 실행 해주세요!", 2);
                     AllFindRoomActivity.this.finish();
                 }
-                return;
             }
         }
     }
@@ -186,8 +190,10 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             settingsIc.setVisibility(View.GONE);
 
             ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
-            mapViewContainer.removeAllViews();
-            mapViewContainer.removeAllViewsInLayout();
+            if (mapViewContainer != null) {
+                mapViewContainer.removeAllViews();
+                mapViewContainer.removeAllViewsInLayout();
+            }
 
             mapView = new MapView(this);
             mapView.setDaumMapApiKey(DB.mapApiKey);
@@ -197,7 +203,9 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             mapView.zoomIn(true);
             mapView.zoomOut(true);
 
-            mapViewContainer.addView(mapView);
+            if (mapViewContainer != null) {
+                mapViewContainer.addView(mapView);
+            }
 
             Thread getLocationPoint = new Thread(new GetLocationPoint());
             getLocationPoint.start();
@@ -300,9 +308,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     // =======================================
     @Override
     public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem, MapPOIItem.CalloutBalloonButtonType calloutBalloonButtonType) {
-        MapPOIItem item = mapPOIItem;
-
-        Integer tag = item.getTag();
+        Integer tag = mapPOIItem.getTag();
 
         Intent intent = new Intent(AllFindRoomActivity.this, RoomActivity.class);
         intent.putExtra("srl", tag + "");
@@ -366,7 +372,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         // 1. 일반
         // 2. 거리 순
         // 3. 가격 순
-        //
+
         int type;
 
         public GetRoomListByOrder(int type) {
@@ -375,7 +381,8 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
         @Override
         public void run() {
-            final HashMap<String, String> roomData = new HashMap<>();
+
+            LinkedList<String> list = new LinkedList<>();
 
             try {
                 String listParam = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
@@ -386,6 +393,37 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
                 for (int i = 0; i < listJSONArray.length(); i++) {
                     String roomSrl = listJSONArray.getJSONObject(i).getString("srl");
+                    list.add(roomSrl);
+                }
+
+            } catch (Exception e) {
+                DB.sendToast("ErrorCode 28: " + e.getMessage(), 2);
+            }
+
+            new Thread(new GetRoomListInfo(list)).start();
+        }
+    }
+
+
+    // =======================================
+    //   방 정보 불러오는 메소드
+    // =======================================
+    public class GetRoomListInfo implements Runnable {
+
+        public LinkedList<String> rooms;
+
+        public GetRoomListInfo(LinkedList<String> rooms) {
+            this.rooms = rooms;
+        }
+
+        @Override
+        public void run() {
+            final HashMap<String, String> roomData = new HashMap<>();
+
+            for(int i = 0; i < rooms.size(); i++) {
+                try {
+                    String roomSrl = rooms.get(i);
+                    Log.d("srl", roomSrl);
 
                     String roomParam = URLP.PARAM_DOCUMENT_SRL + roomSrl;
                     String roomResult = new JsonHandler(URLP.FIND_ROOM_INFO, roomParam).execute().get();
@@ -396,10 +434,9 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                     String result = roomJSONArray.getJSONObject(0).getString("info");
 
                     roomData.put(roomSrl, result);
+                } catch (Exception e) {
+                    DB.sendToast("ErrorCode 28: " + e.getMessage(), 2);
                 }
-
-            } catch (Exception e) {
-                DB.sendToast("ErrorCode 28: " + e.getMessage(), 2);
             }
 
             runOnUiThread(new Runnable() {
@@ -417,7 +454,9 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     // =======================================
     public void drawListContent(final HashMap<String, String> roomData) {
         ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
-        mapViewContainer.removeAllViews();
+        if (mapViewContainer != null) {
+            mapViewContainer.removeAllViews();
+        }
 
         updateMenuList(true);
         settingsIc.setVisibility(View.VISIBLE);
@@ -452,15 +491,13 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
         ScrollView scrollView = new AllFindRoomListView(AllFindRoomActivity.this);
         scrollView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        mapViewContainer.addView(scrollView);
+        if (mapViewContainer != null) {
+            mapViewContainer.addView(scrollView);
+        }
 
         LinearLayout parentLayout = (LinearLayout) scrollView.findViewById(R.id.activity_all_find_list_layout);
 
-        Iterator<String> itr = roomData.keySet().iterator();
-
-        while (itr.hasNext()) {
-            final String roomSrl = itr.next();
-
+        for (final String roomSrl : roomData.keySet()) {
             LinearLayout linearLayout = new AllFindRoomListItemView(AllFindRoomActivity.this, roomData.get(roomSrl));
             linearLayout.setOnClickListener(new View.OnClickListener() {
                 @Override

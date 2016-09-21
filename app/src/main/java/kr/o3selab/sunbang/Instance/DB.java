@@ -28,6 +28,7 @@ public class DB {
     public static String PHONE_NUMBER = "phone";
     public static String device_id = "";
     public static String phone_number = "";
+    public static String NETWORK_CHECK = "networkCheck";
 
     //모듈 정보
     public static Integer NOTICE_MODULE = 139;

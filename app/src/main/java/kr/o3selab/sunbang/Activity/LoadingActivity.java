@@ -86,6 +86,11 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
                 Thread th = new Thread(new GetVersionData());
                 th.start();
                 break;
+            case AlertDialog.BUTTON_NEUTRAL:
+                SharedPreferences.Editor editor = DB.getEditor();
+                editor.putBoolean(DB.NETWORK_CHECK, true);
+                editor.commit();
+                break;
             case AlertDialog.BUTTON_NEGATIVE:
                 DB.sendToast("프로그램을 종료합니다.", 2);
                 this.finish();
@@ -149,14 +154,24 @@ public class LoadingActivity extends AppCompatActivity implements DialogInterfac
             Thread th = new Thread(new GetVersionData());
             th.start();
         } else if (mobile.isConnected()) { // 데이터 네트워크에 연결된 경우
-            new AlertDialog.Builder(this)
-                    .setTitle("경고")
-                    .setMessage("현재 스마트폰이 3G/LTE 데이터 네트워크에 연결되어 있습니다. " +
-                            "계속 진행시 데이터 사용료가 부과 될 수 있습니다. 계속 진행하시겠습니까?")
-                    .setPositiveButton("네", this)
-                    .setNegativeButton("아니오", this)
-                    .setCancelable(false)
-                    .show();
+            SharedPreferences sharedPreferences = DB.getSharedPreferences();
+            boolean networkChcek = sharedPreferences.getBoolean(DB.NETWORK_CHECK, false);
+
+            if(!networkChcek) {
+                new AlertDialog.Builder(this)
+                        .setTitle("경고")
+                        .setMessage("현재 스마트폰이 3G/LTE 데이터 네트워크에 연결되어 있습니다. " +
+                                "계속 진행시 데이터 사용료가 부과 될 수 있습니다. 계속 진행하시겠습니까?")
+                        .setPositiveButton("네", this)
+                        .setNeutralButton("네(다시묻지않음)", this)
+                        .setNegativeButton("아니오", this)
+                        .setCancelable(false)
+                        .show();
+            } else {
+                Thread th = new Thread(new GetVersionData());
+                th.start();
+            }
+
         } else { // 인터넷에 연결되지 않은 경우
             new AlertDialog.Builder(this)
                     .setTitle("경고")
