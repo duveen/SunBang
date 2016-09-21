@@ -1,8 +1,5 @@
 package kr.o3selab.sunbang.Instance;
 
-/**
- * Created by duvee on 2016-08-08.
- */
 public class URLP {
     public static final String BASE_URL;
     public static final String API_URL;

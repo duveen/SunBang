@@ -3,9 +3,6 @@ package kr.o3selab.sunbang.Instance;
 import android.app.ProgressDialog;
 import android.content.Context;
 
-/**
- * Created by duvee on 2016-08-09.
- */
 public class SunbangProgress extends ProgressDialog {
 
     public SunbangProgress(Context context) {

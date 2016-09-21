@@ -3,11 +3,9 @@ package kr.o3selab.sunbang.Instance;
 import android.app.ProgressDialog;
 import android.util.Log;
 
+import java.util.Collections;
 import java.util.LinkedList;
 
-/**
- * Created by duvee on 2016-08-09.
- */
 public class ThreadGroupHandler extends Thread {
 
     private Thread[] threadGroup;
@@ -23,9 +21,7 @@ public class ThreadGroupHandler extends Thread {
         try {
             LinkedList<Thread> threadLinkedList = new LinkedList<>();
 
-            for(Thread th : threadGroup) {
-                threadLinkedList.add(th);
-            }
+            Collections.addAll(threadLinkedList, threadGroup);
 
             Log.d("check", "다이얼로그 실행");
             DB.activity.runOnUiThread(new Runnable() {
