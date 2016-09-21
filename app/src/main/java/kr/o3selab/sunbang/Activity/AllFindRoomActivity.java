@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -31,8 +32,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Instance.JsonHandler;
@@ -49,6 +51,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public MapView mapView;
     public ImageView undoIc;
     public ImageView selectIc;
+    public ImageView settingsIc;
 
     public double lat;
     public double lng;
@@ -83,6 +86,11 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             }
         });
 
+        // 설정 아이콘
+        settingsIc = (ImageView) findViewById(R.id.activity_all_find_ic_setting);
+        settingsIc.setVisibility(View.GONE);
+
+
         // 메뉴바 설정
         adb = new AlertDialog.Builder(this);
         adb.setTitle("메뉴");
@@ -109,8 +117,8 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         DB.activity = this;
         DB.context = this;
 
-        if(!listFlag) getLoadMap();
-        else new Thread(new GetRoomListByOrder()).start();
+        if (!listFlag) getLoadMap();
+        else new Thread(new GetRoomListByOrder(1)).start();
     }
 
     @Override
@@ -175,6 +183,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public void getLoadMap() {
         try {
             updateMenuList(false);
+            settingsIc.setVisibility(View.GONE);
 
             ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
             mapViewContainer.removeAllViews();
@@ -338,7 +347,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                 break;
 
             case "리스트로 보기":
-                new Thread(new GetRoomListByOrder()).start();
+                new Thread(new GetRoomListByOrder(1)).start();
                 break;
 
             case "지도로 보기":
@@ -352,9 +361,21 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     //   리스트 정보 불러오기 메소드
     // =======================================
     public class GetRoomListByOrder implements Runnable {
+
+        // 타입 정의
+        // 1. 일반
+        // 2. 거리 순
+        // 3. 가격 순
+        //
+        int type;
+
+        public GetRoomListByOrder(int type) {
+            this.type = type;
+        }
+
         @Override
         public void run() {
-            final Vector<String> roomData = new Vector<>();
+            final HashMap<String, String> roomData = new HashMap<>();
 
             try {
                 String listParam = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
@@ -363,7 +384,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                 JSONObject listJSONObject = new JSONObject(listResult);
                 JSONArray listJSONArray = listJSONObject.getJSONArray("result");
 
-                for(int i = 0; i < listJSONArray.length(); i++) {
+                for (int i = 0; i < listJSONArray.length(); i++) {
                     String roomSrl = listJSONArray.getJSONObject(i).getString("srl");
 
                     String roomParam = URLP.PARAM_DOCUMENT_SRL + roomSrl;
@@ -374,7 +395,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
                     String result = roomJSONArray.getJSONObject(0).getString("info");
 
-                    roomData.add(result);
+                    roomData.put(roomSrl, result);
                 }
 
             } catch (Exception e) {
@@ -384,24 +405,103 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
-                    mapViewContainer.removeAllViews();
-
-                    updateMenuList(true);
-
-                    ScrollView scrollView = new AllFindRoomListView(AllFindRoomActivity.this);
-                    scrollView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                    mapViewContainer.addView(scrollView);
-
-                    LinearLayout parentLayout = (LinearLayout) scrollView.findViewById(R.id.activity_all_find_list_layout);
-
-                    for(int i = 0; i < roomData.size(); i++) {
-                        LinearLayout linearLayout = new AllFindRoomListItemView(AllFindRoomActivity.this, roomData.get(i));
-                        parentLayout.addView(linearLayout);
-                    }
+                    drawListContent(roomData);
                 }
             });
         }
+    }
+
+
+    // =======================================
+    //   리스트 정보 다시 그리는 메소드
+    // =======================================
+    public void drawListContent(final HashMap<String, String> roomData) {
+        ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
+        mapViewContainer.removeAllViews();
+
+        updateMenuList(true);
+        settingsIc.setVisibility(View.VISIBLE);
+        settingsIc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String[] value = {"건물 설정", "정렬 방식"};
+                AlertDialog.Builder builder = new AlertDialog.Builder(AllFindRoomActivity.this);
+
+                builder.setTitle("설정");
+                builder.setItems(value, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String selectedText = Arrays.asList(value).get(which);
+
+                        switch(selectedText) {
+                            case "건물 설정":
+                                showSelectBuildingDialog(roomData);
+                                break;
+                            case "정렬 방식":
+                                DB.sendToast("정렬 방식 변경", 1);
+                                break;
+                        }
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
+
+
+        ScrollView scrollView = new AllFindRoomListView(AllFindRoomActivity.this);
+        scrollView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mapViewContainer.addView(scrollView);
+
+        LinearLayout parentLayout = (LinearLayout) scrollView.findViewById(R.id.activity_all_find_list_layout);
+
+        Iterator<String> itr = roomData.keySet().iterator();
+
+        while (itr.hasNext()) {
+            final String roomSrl = itr.next();
+
+            LinearLayout linearLayout = new AllFindRoomListItemView(AllFindRoomActivity.this, roomData.get(roomSrl));
+            linearLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(AllFindRoomActivity.this, RoomActivity.class);
+                    intent.putExtra("srl", roomSrl);
+
+                    startActivity(intent);
+                }
+            });
+            parentLayout.addView(linearLayout);
+        }
+    }
+
+
+    // =======================================
+    //   건물 선택 다이얼로그
+    // =======================================
+    public void showSelectBuildingDialog(final HashMap<String, String> roomData) {
+        AlertDialog.Builder alertdialogbuilder = new AlertDialog.Builder(AllFindRoomActivity.this);
+
+        alertdialogbuilder.setTitle("설정하고 싶은 건물을 입력하세요!");
+        alertdialogbuilder.setItems(DB.locationValue, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String korSelectedText = Arrays.asList(DB.locationValue).get(which);
+                String engSelectedText = DB.getLocationEngName(korSelectedText);
+
+                DB.defaultBuilding = engSelectedText;
+
+                SharedPreferences.Editor editor = DB.getEditor();
+                editor.putString(DB.DEFAULT_BUILDING, engSelectedText);
+                editor.commit();
+
+                drawListContent(roomData);
+            }
+        });
+
+        AlertDialog dialog = alertdialogbuilder.create();
+
+        dialog.show();
     }
 
 

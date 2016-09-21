@@ -14,7 +14,7 @@
         android:background="#5f84ce">
         <me.grantland.widget.AutofitTextView
             android:layout_gravity="center"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
             android:maxLines="1"
@@ -22,8 +22,6 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#ffffff"
             android:textStyle="bold"
-            android:layout_marginLeft="50dp"
-            android:layout_marginRight="40dp"
             android:gravity="center" />
         <ImageView
             android:layout_width="50dp"
@@ -35,16 +33,36 @@
             android:padding="5dp"
             android:tint="#ffffff" />
 
-        <ImageView
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:id="@+id/activity_all_find_ic_select"
-            android:layout_gravity="right|center_vertical"
-            android:src="@drawable/ic_more_button"
-            android:focusableInTouchMode="false"
-            android:tint="#ffffff"
-            android:padding="7dp"
-            android:layout_marginTop="1dp" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|right">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:id="@+id/activity_all_find_ic_setting"
+                android:layout_gravity="right|center_vertical"
+                android:src="@drawable/ic_settings"
+                android:focusableInTouchMode="false"
+                android:tint="#ffffff"
+                android:padding="7dp"
+                android:layout_marginTop="1dp"
+                android:visibility="gone" />
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:id="@+id/activity_all_find_ic_select"
+                android:layout_gravity="right|center_vertical"
+                android:src="@drawable/ic_more_button"
+                android:focusableInTouchMode="false"
+                android:tint="#ffffff"
+                android:padding="7dp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
     </FrameLayout>
 
     <!--진한 라인-->

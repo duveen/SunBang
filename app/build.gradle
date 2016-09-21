@@ -49,5 +49,6 @@ dependencies {
     compile group: 'com.kakao.sdk', name: 'kakaolink', version: '1.1.20'
     // 카카오톡 sdk를 사용하기 위해 필요.
     compile group: 'com.kakao.sdk', name: 'kakaotalk', version: '1.1.20'
-
+    // 레인지 바 라이브러리
+    compile 'com.yahoo.mobile.client.android.util.rangeseekbar:rangeseekbar-library:0.1.0'
 }

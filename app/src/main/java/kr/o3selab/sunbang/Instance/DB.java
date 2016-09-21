@@ -50,6 +50,13 @@ public class DB {
     public static final String NATURE_SCIENCE_BUILDING = "sNatureScienceBuilding";
     public static final String LIBERAL_ARTS_BUILDING = "sLiberalArtsBuilding";
     public static final String HOSPITAL_BUILDING = "sHospitalBuilding";
+    public static final String[] locationValue = {
+            getLocationName(MAIN_BUILDING),
+            getLocationName(ENGINEERING_BUILDING),
+            getLocationName(WONHWAKWAN),
+            getLocationName(NATURE_SCIENCE_BUILDING),
+            getLocationName(LIBERAL_ARTS_BUILDING),
+            getLocationName(HOSPITAL_BUILDING) };
     public static void updateLocation() {
         sLocationLat.put("sMainBuilding", 36.80022619356785);
         sLocationLng.put("sMainBuilding", 127.07495224085592);
@@ -82,6 +89,24 @@ public class DB {
 
         return null;
     }
+    public static String getLocationEngName(String korLocation) {
+        switch (korLocation) {
+            case "본관":
+                return MAIN_BUILDING;
+            case "공학관":
+                return ENGINEERING_BUILDING;
+            case "원화관":
+                return WONHWAKWAN;
+            case "자연관":
+                return NATURE_SCIENCE_BUILDING;
+            case "인문관":
+                return LIBERAL_ARTS_BUILDING;
+            case "보건관":
+                return HOSPITAL_BUILDING;
+        }
+        return null;
+    }
+
     public static final String DEFAULT_BUILDING = "dBuilding";
     public static String defaultBuilding = MAIN_BUILDING;
 
