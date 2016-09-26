@@ -33,9 +33,14 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 import kr.o3selab.sunbang.Instance.DB;
 import kr.o3selab.sunbang.Instance.JsonHandler;
@@ -57,7 +62,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public double lat;
     public double lng;
 
-    public boolean listFlag = false;
+    public boolean listFlag = true;
 
     AlertDialog.Builder adb;
 
@@ -111,6 +116,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         pd = new SunbangProgress(this);
 
         getPermission();
+        if(listFlag) new Thread(new GetRoomListByOrder(1)).start();
     }
 
     @Override
@@ -132,7 +138,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
             mapView.setShowCurrentLocationMarker(false);
         }
 
-        if(!listFlag) {
+        if (!listFlag) {
             ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
             if (mapViewContainer != null) {
                 mapViewContainer.removeAllViews();
@@ -382,25 +388,65 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         @Override
         public void run() {
 
-            LinkedList<String> list = new LinkedList<>();
+            Vector<String> list = new Vector<>();
+            String listParam;
+            String listResult;
 
+            JSONObject listJSONObject;
+            JSONArray listJSONArray;
             try {
-                String listParam = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
-                String listResult = new JsonHandler(URLP.FIND_ROOM_LIST, listParam).execute().get();
+                switch (type) {
+                    case 1:
+                        listParam = URLP.PARAM_MODULE_SRL + DB.ROOM_MODULE;
+                        listResult = new JsonHandler(URLP.FIND_ROOM_LIST, listParam).execute().get();
 
-                JSONObject listJSONObject = new JSONObject(listResult);
-                JSONArray listJSONArray = listJSONObject.getJSONArray("result");
+                        listJSONObject = new JSONObject(listResult);
+                        listJSONArray = listJSONObject.getJSONArray("result");
 
-                for (int i = 0; i < listJSONArray.length(); i++) {
-                    String roomSrl = listJSONArray.getJSONObject(i).getString("srl");
-                    list.add(roomSrl);
+                        for (int i = 0; i < listJSONArray.length(); i++) {
+                            String roomSrl = listJSONArray.getJSONObject(i).getString("srl");
+                            list.add(roomSrl);
+                        }
+                        break;
+
+                    case 2:
+                        listResult = new JsonHandler(URLP.FIND_ROOM_LIST_WITH_LAT_LNG, null).execute().get();
+
+                        listJSONObject = new JSONObject(listResult);
+                        listJSONArray = listJSONObject.getJSONArray("result");
+
+                        HashMap<String, Float> distanceMap = new HashMap<>();
+
+                        for (int i = 0; i < listJSONArray.length(); i++) {
+                            JSONObject jsonObject2 = listJSONArray.getJSONObject(i);
+
+                            String srl = jsonObject2.getString("srl");
+                            String lat = jsonObject2.getString("lat");
+                            String lng = jsonObject2.getString("lng");
+
+                            Float distance = DB.calcLocation(
+                                    DB.sLocationLat.get(DB.defaultBuilding),
+                                    DB.sLocationLng.get(DB.defaultBuilding),
+                                    Double.parseDouble(lat),
+                                    Double.parseDouble(lng));
+
+                            distanceMap.put(srl, distance);
+                        }
+
+                        Map<String, Float> sortMap = sortByValue(distanceMap);
+                        for (String srl : sortMap.keySet()) {
+                            list.add(srl);
+                        }
+
+                        break;
                 }
 
+                new Thread(new GetRoomListInfo(list)).start();
             } catch (Exception e) {
                 DB.sendToast("ErrorCode 28: " + e.getMessage(), 2);
             }
 
-            new Thread(new GetRoomListInfo(list)).start();
+
         }
     }
 
@@ -410,21 +456,18 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     // =======================================
     public class GetRoomListInfo implements Runnable {
 
-        public LinkedList<String> rooms;
+        public Vector<String> rooms;
 
-        public GetRoomListInfo(LinkedList<String> rooms) {
+        public GetRoomListInfo(Vector<String> rooms) {
             this.rooms = rooms;
         }
 
         @Override
         public void run() {
-            final HashMap<String, String> roomData = new HashMap<>();
+            final Vector<DataStruct> roomData = new Vector<>();
 
-            for(int i = 0; i < rooms.size(); i++) {
+            for (String roomSrl : rooms) {
                 try {
-                    String roomSrl = rooms.get(i);
-                    Log.d("srl", roomSrl);
-
                     String roomParam = URLP.PARAM_DOCUMENT_SRL + roomSrl;
                     String roomResult = new JsonHandler(URLP.FIND_ROOM_INFO, roomParam).execute().get();
 
@@ -433,7 +476,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
                     String result = roomJSONArray.getJSONObject(0).getString("info");
 
-                    roomData.put(roomSrl, result);
+                    roomData.add(new DataStruct(roomSrl, result));
                 } catch (Exception e) {
                     DB.sendToast("ErrorCode 28: " + e.getMessage(), 2);
                 }
@@ -452,7 +495,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     // =======================================
     //   리스트 정보 다시 그리는 메소드
     // =======================================
-    public void drawListContent(final HashMap<String, String> roomData) {
+    public void drawListContent(final Vector<DataStruct> roomData) {
         ViewGroup mapViewContainer = (ViewGroup) findViewById(R.id.activity_all_find_room_container);
         if (mapViewContainer != null) {
             mapViewContainer.removeAllViews();
@@ -472,12 +515,12 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                     public void onClick(DialogInterface dialog, int which) {
                         String selectedText = Arrays.asList(value).get(which);
 
-                        switch(selectedText) {
+                        switch (selectedText) {
                             case "건물 설정":
                                 showSelectBuildingDialog(roomData);
                                 break;
                             case "정렬 방식":
-                                DB.sendToast("정렬 방식 변경", 1);
+                                showSelectTypeDialog();
                                 break;
                         }
                     }
@@ -497,18 +540,19 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
         LinearLayout parentLayout = (LinearLayout) scrollView.findViewById(R.id.activity_all_find_list_layout);
 
-        for (final String roomSrl : roomData.keySet()) {
-            LinearLayout linearLayout = new AllFindRoomListItemView(AllFindRoomActivity.this, roomData.get(roomSrl));
+        int index = 0;
+        for (final DataStruct data : roomData) {
+            LinearLayout linearLayout = new AllFindRoomListItemView(AllFindRoomActivity.this, data.result);
             linearLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(AllFindRoomActivity.this, RoomActivity.class);
-                    intent.putExtra("srl", roomSrl);
+                    intent.putExtra("srl", data.roomSrl);
 
                     startActivity(intent);
                 }
             });
-            parentLayout.addView(linearLayout);
+            parentLayout.addView(linearLayout, index++);
         }
     }
 
@@ -516,7 +560,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     // =======================================
     //   건물 선택 다이얼로그
     // =======================================
-    public void showSelectBuildingDialog(final HashMap<String, String> roomData) {
+    public void showSelectBuildingDialog(final Vector<DataStruct> roomData) {
         AlertDialog.Builder alertdialogbuilder = new AlertDialog.Builder(AllFindRoomActivity.this);
 
         alertdialogbuilder.setTitle("설정하고 싶은 건물을 입력하세요!");
@@ -537,6 +581,40 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         });
 
         AlertDialog dialog = alertdialogbuilder.create();
+
+        dialog.show();
+    }
+
+
+    // =======================================
+    //   정렬방식 설정 다이얼로그
+    // =======================================
+    public void showSelectTypeDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(AllFindRoomActivity.this);
+
+        final String[] value = {"일반", "거리 순", "가격 순"};
+
+        builder.setTitle("정렬 방식을 선택하세요!");
+        builder.setItems(value, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String selectedText = Arrays.asList(value).get(which);
+
+                switch (selectedText) {
+                    case "일반":
+                        new Thread(new GetRoomListByOrder(1)).start();
+                        break;
+                    case "거리 순":
+                        new Thread(new GetRoomListByOrder(2)).start();
+                        break;
+                    case "가격 순":
+                        DB.sendToast("개발중", 1);
+                        break;
+                }
+            }
+        });
+
+        AlertDialog dialog = builder.create();
 
         dialog.show();
     }
@@ -570,6 +648,26 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
 
 
     // =======================================
+    //   Map Value 정렬 메소드
+    // =======================================
+    public <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+            @Override
+            public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                return (o1.getValue()).compareTo(o2.getValue());
+            }
+        });
+
+        Map<K, V> result = new LinkedHashMap<>();
+        for (Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+        return result;
+    }
+
+
+    // =======================================
     //   미사용 콜백 메소드
     // =======================================
     @Override
@@ -597,6 +695,16 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     @Override
     public void onProviderDisabled(String provider) {
 
+    }
+
+    public class DataStruct {
+        public String roomSrl;
+        public String result;
+
+        public DataStruct(String roomSrl, String result) {
+            this.roomSrl = roomSrl;
+            this.result = result;
+        }
     }
 
 

@@ -2,6 +2,7 @@ package kr.o3selab.sunbang.Instance;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -9,6 +10,7 @@ import com.kakao.kakaolink.KakaoLink;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import kr.o3selab.sunbang.Activity.LoadingActivity;
 
@@ -111,6 +113,12 @@ public class DB {
     public static final String DEFAULT_BUILDING = "dBuilding";
     public static String defaultBuilding = MAIN_BUILDING;
 
+    //거리 계산 메소드
+    public static float calcLocation(double sourceLat, double sourceLng, double destLat, double destLng) {
+        float[] distance = new float[1];
+        Location.distanceBetween(sourceLat, sourceLng, destLat, destLng, distance);
+        return distance[0];
+    }
 
     //다음 지도 apiKey
     public static String mapApiKey = "1011c8a2c4d75d3594f6f3e1fc22901f";

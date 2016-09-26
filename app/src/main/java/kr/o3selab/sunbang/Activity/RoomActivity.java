@@ -100,8 +100,6 @@ public class RoomActivity extends AppCompatActivity {
 
     public MapView mapView;
 
-    public int position;
-
     // 데이터
     public boolean mapFlag = false;
     public String roomSrl;
