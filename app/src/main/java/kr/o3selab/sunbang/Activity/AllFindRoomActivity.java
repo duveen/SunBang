@@ -17,7 +17,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -62,7 +61,7 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
     public double lat;
     public double lng;
 
-    public boolean listFlag = true;
+    public boolean listFlag = false;
 
     AlertDialog.Builder adb;
 
@@ -78,8 +77,8 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         DB.activity = this;
         DB.context = this;
 
+        // 메뉴 설정
         List<String> menuList = setListMenu();
-
         menus = new String[menuList.size()];
         menus = menuList.toArray(menus);
 
@@ -97,7 +96,6 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
         if (settingsIc != null) {
             settingsIc.setVisibility(View.GONE);
         }
-
 
         // 메뉴바 설정
         adb = new AlertDialog.Builder(this);
@@ -350,6 +348,9 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                             })
                             .setNegativeButton("아니오", null)
                             .show();
+                } else {
+                    if(mapView != null)
+                        mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeadingWithoutMapMoving);
                 }
                 break;
 
@@ -437,6 +438,10 @@ public class AllFindRoomActivity extends AppCompatActivity implements MapView.PO
                         for (String srl : sortMap.keySet()) {
                             list.add(srl);
                         }
+
+                        break;
+
+                    case 3:
 
                         break;
                 }
